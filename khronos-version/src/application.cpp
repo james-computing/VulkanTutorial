@@ -8,7 +8,7 @@ void Application::run() {
 }
 
 void Application::initVulkan() {
-
+    createInstance();
 }
 
 void Application::mainLoop() {
@@ -32,4 +32,61 @@ void Application::initWindow() {
     // The 4th parameter is to specify a monitor,
     // The 5th is for OpenGL.
     window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
+}
+
+void Application::createInstance() {
+    // Get the required instance extensions from GLFW
+    uint32_t glfwExtensionCount;
+    const char ** glfwExtensions {glfwGetRequiredInstanceExtensions(&glfwExtensionCount)};
+
+    // Check if the required GLFW extensions are supported by the Vulkan implementation
+    vk::ResultValue<std::vector<vk::ExtensionProperties>> resultValueExtensionProperties {context.enumerateInstanceExtensionProperties()};
+    if (!resultValueExtensionProperties.has_value()) {
+        std::cerr << "Failed to get extension properties in createInstance.";
+    }
+
+    std::vector<vk::ExtensionProperties> extensionProperties {resultValueExtensionProperties.value};
+
+    // Print available extensions
+    std::cout << "available extensions:\n";
+    for (const auto & extensionProperty : extensionProperties) {
+        std::cout << '\t' << extensionProperty.extensionName << '\n';
+    }
+
+    for (uint32_t i {0}; i < glfwExtensionCount; ++i) {
+        // Check if i-th required extension is supported
+        bool notSupported {
+            std::ranges::none_of(
+            extensionProperties,
+            [glfwExtension = glfwExtensions[i]](vk::ExtensionProperties const & extensionProperty) -> bool {
+                return strcmp(extensionProperty.extensionName, glfwExtension) == 0;
+            })
+        };
+
+        if (notSupported)
+        {
+            throw std::runtime_error("Required GLFW extension not supported: " + std::string(glfwExtensions[i]));
+        }
+    }
+
+    constexpr vk::ApplicationInfo appInfo {
+        .pApplicationName = "Application",
+        .applicationVersion = VK_MAKE_API_VERSION(1, 0, 0, 0), // VK_MAKE_VERSION is deprecated
+        .pEngineName = "No Engine",
+        .engineVersion = VK_MAKE_API_VERSION(1, 0, 0, 0), // VK_MAKE_VERSION is deprecated
+        .apiVersion = vk::ApiVersion14
+    };
+
+    vk::InstanceCreateInfo createInfo {
+        .pApplicationInfo = &appInfo,
+        .enabledExtensionCount = glfwExtensionCount,
+        .ppEnabledExtensionNames = glfwExtensions
+    };
+
+    vk::ResultValue<vk::raii::Instance> resultValueInstance {context.createInstance(createInfo, nullptr)};
+    if (!resultValueInstance.has_value()) {
+        std::cerr << "Failed to create Vulkan instance in Application::createInstance";
+    }
+
+    instance = std::move(resultValueInstance.value);
 }
