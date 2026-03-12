@@ -1,6 +1,6 @@
 CXX = g++
 CXXFLAGS = -std=c++23 -O3
-LDFLAGS = -lglfw -lvulkan -ldl -lpthread -lX11 -lXxf86vm -lXrandr -lXi
+LDFLAGS = -lglfw -ldl -lpthread -lX11 -lXxf86vm -lXrandr -lXi
 SRC_DIR = src
 OBJ_DIR = obj
 BIN_DIR = .
