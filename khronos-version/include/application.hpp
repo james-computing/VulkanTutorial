@@ -45,6 +45,5 @@ private:
 
     std::vector<char const *> getRequiredGLFWExtensions();
     std::vector<char const *> getRequiredValidationLayers();
-    //std::vector<char const *> getRequiredInstanceExtensions();
     void createInstance();
 };
