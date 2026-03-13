@@ -10,6 +10,7 @@ void Application::run() {
 void Application::initVulkan() {
     createInstance();
     setupDebugMessenger();
+    pickPhysicalDevice();
 }
 
 void Application::mainLoop() {
@@ -195,4 +196,102 @@ void Application::setupDebugMessenger() {
     }
 
     debugMessenger = std::move(resultValue.value);
+}
+
+void Application::pickPhysicalDevice() {
+    vk::ResultValue<std::vector<vk::raii::PhysicalDevice>> const resultValue {instance.enumeratePhysicalDevices()};
+    if (!resultValue.has_value()) {
+        throw std::runtime_error("Failed to enumerate physical devices");
+    }
+
+    std::vector<vk::raii::PhysicalDevice> const physicalDevices {resultValue.value};
+    
+    auto const deviceIterator {
+        // Find if there is some suitable device
+        std::ranges::find_if(
+            physicalDevices,
+            [this] (vk::raii::PhysicalDevice const & physicalDevice) -> bool {
+                return isDeviceSuitable(physicalDevice);
+            }
+        )
+    };
+
+    if (deviceIterator == physicalDevices.end()) {
+        throw std::runtime_error("Failed to find a suitable physical device");
+    }
+
+    // Pick the first suitable physical device found
+    physicalDevice = *deviceIterator;
+}
+
+bool Application::isDeviceSuitable(vk::raii::PhysicalDevice const & physicalDevice) {
+    vk::PhysicalDeviceProperties const deviceProperties {physicalDevice.getProperties()};
+    vk::PhysicalDeviceFeatures const deviceFeatures {physicalDevice.getFeatures()};
+    std::vector<vk::QueueFamilyProperties> const queueFamilies {physicalDevice.getQueueFamilyProperties()};
+    std::vector<char const *> const requiredDeviceExtensions({vk::KHRSwapchainExtensionName});
+
+    bool const supportsVulkan1_3 {deviceProperties.apiVersion >= vk::ApiVersion13};
+
+    bool const supportsGraphics {
+        std::ranges::any_of(
+            queueFamilies,
+            [] (vk::QueueFamilyProperties const &qfp) -> bool {
+                // !! is to cast to bool
+                return !!(qfp.queueFlags & vk::QueueFlagBits::eGraphics);
+            }
+        )
+    };
+
+    //
+
+    vk::ResultValue<std::vector<vk::ExtensionProperties>> const resultValueExtensionProperties {
+        physicalDevice.enumerateDeviceExtensionProperties()
+    };
+    if (!resultValueExtensionProperties.has_value()) {
+        std::cerr << "Failed to enumerate device extension properties";
+        return false;
+    }
+
+    std::vector<vk::ExtensionProperties> const availableDeviceExtensions {resultValueExtensionProperties.value};
+
+    bool supportsAllRequiredExtensions {
+        // All of the required device extensions are any of the available extensions
+        std::ranges::all_of(
+            requiredDeviceExtensions,
+            [&availableDeviceExtensions] (char const * const & requiredDeviceExtension) -> bool {
+                return std::ranges::any_of(
+                    availableDeviceExtensions,
+                    [requiredDeviceExtension] (vk::ExtensionProperties const & availableDeviceExtension) -> bool {
+                        return strcmp(availableDeviceExtension.extensionName, requiredDeviceExtension) == 0;
+                    }
+                );
+            }
+        )
+    };
+
+    auto features {
+        // .template is to tell the compiler to use the method that comes from templates, avoiding ambiguity
+        physicalDevice.template getFeatures2<
+            vk::PhysicalDeviceFeatures2,
+            vk::PhysicalDeviceVulkan13Features,
+            vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT
+        >()
+    };
+    bool supportsRequiredFeatures {
+        features.template get<vk::PhysicalDeviceVulkan13Features>().dynamicRendering &&
+        features.template get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>().extendedDynamicState
+    };
+
+    return supportsVulkan1_3 && supportsGraphics && supportsAllRequiredExtensions && supportsRequiredFeatures;
+
+    /*
+    if (
+        deviceProperties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu &&
+        deviceFeatures.geometryShader &&
+        supportsVulkan1_3
+    ) {
+        return true;
+    }
+
+    return false;*/
 }

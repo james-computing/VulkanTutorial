@@ -19,6 +19,7 @@ class Application {
 public:
     void run();
 private:
+    ///////////////////////////////////////////////// MEMBER VARIABLES //////////////////////////////////
     uint32_t const WIDTH {800};
     uint32_t const HEIGHT {600};
 
@@ -39,6 +40,10 @@ private:
 
     vk::raii::DebugUtilsMessengerEXT debugMessenger {nullptr};
 
+    vk::raii::PhysicalDevice physicalDevice {nullptr};
+
+    /////////////////////////////////////// METHODS //////////////////////////////////////////////////
+
     void initVulkan();
     void mainLoop();
     void cleanup();
@@ -57,4 +62,7 @@ private:
     );
 
     void setupDebugMessenger();
+
+    void pickPhysicalDevice();
+    bool isDeviceSuitable(vk::raii::PhysicalDevice const & physicalDevice);
 };
