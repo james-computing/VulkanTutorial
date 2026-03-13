@@ -36,12 +36,13 @@ void Application::initWindow() {
 
 void Application::getRequiredGLFWExtensions(uint32_t & glfwExtensionCount, char const ** & glfwExtensions) {
     // Get the required instance extensions from GLFW
-    char const ** glfwExtensions {glfwGetRequiredInstanceExtensions(&glfwExtensionCount)};
+    glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
     // Check if the required GLFW extensions are supported by the Vulkan implementation
     vk::ResultValue<std::vector<vk::ExtensionProperties>> resultValueExtensionProperties {context.enumerateInstanceExtensionProperties()};
     if (!resultValueExtensionProperties.has_value()) {
         std::cerr << "Failed to get extension properties in createInstance.";
+        return;
     }
 
     std::vector<vk::ExtensionProperties> extensionProperties {resultValueExtensionProperties.value};
@@ -91,6 +92,7 @@ void Application::createInstance() {
     vk::ResultValue<vk::raii::Instance> resultValueInstance {context.createInstance(createInfo, nullptr)};
     if (!resultValueInstance.has_value()) {
         std::cerr << "Failed to create Vulkan instance in Application::createInstance";
+        return;
     }
 
     instance = std::move(resultValueInstance.value);
