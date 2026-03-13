@@ -122,6 +122,8 @@ void Application::createInstance() {
 
     vk::InstanceCreateInfo createInfo {
         .pApplicationInfo = &appInfo,
+        .enabledLayerCount = static_cast<uint32_t>(requiredValidationLayers.size()),
+        .ppEnabledLayerNames = requiredValidationLayers.data(),
         .enabledExtensionCount = glfwExtensionCount,
         .ppEnabledExtensionNames = glfwExtensions
     };
