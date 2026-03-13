@@ -43,6 +43,11 @@ std::vector<char const *> Application::getRequiredGLFWExtensions() {
     // Replace glfwExtensions by a vector
     std::vector<char const *> requiredGLFWExtensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
 
+    // Also require the extension necessary for the message callback
+    if(enableValidationLayers) {
+        requiredGLFWExtensions.push_back(vk::EXTDebugUtilsExtensionName);
+    }
+
     // Check if the required GLFW extensions are supported by the Vulkan implementation
     vk::ResultValue<std::vector<vk::ExtensionProperties>> resultValueExtensionProperties {context.enumerateInstanceExtensionProperties()};
     if (!resultValueExtensionProperties.has_value()) {
