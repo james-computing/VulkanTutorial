@@ -125,7 +125,7 @@ void Application::createInstance() {
     std::vector<char const *> const requiredGLFWExtensions = getRequiredGLFWExtensions();
     std::vector<char const *> const requiredValidationLayers = getRequiredValidationLayers();
 
-    constexpr vk::ApplicationInfo const appInfo {
+    vk::ApplicationInfo constexpr appInfo {
         .pApplicationName = "Application",
         .applicationVersion = VK_MAKE_API_VERSION(1, 0, 0, 0), // VK_MAKE_VERSION is deprecated
         .pEngineName = "No Engine",
@@ -166,13 +166,13 @@ void Application::setupDebugMessenger() {
         return;
     }
 
-    vk::DebugUtilsMessageSeverityFlagsEXT const severityFlags(
+    vk::DebugUtilsMessageSeverityFlagsEXT constexpr severityFlags(
         vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose |
         vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning |
         vk::DebugUtilsMessageSeverityFlagBitsEXT::eError
     );
 
-    vk::DebugUtilsMessageTypeFlagsEXT const messageTypeFlags(
+    vk::DebugUtilsMessageTypeFlagsEXT constexpr messageTypeFlags(
         vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral |
         vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance |
         vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation
