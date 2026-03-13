@@ -33,5 +33,6 @@ private:
 
     void initWindow();
 
+    void getRequiredGLFWExtensions(uint32_t & glfwExtensionCount, char const ** & glfwExtensions);
     void createInstance();
 };

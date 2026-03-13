@@ -34,10 +34,9 @@ void Application::initWindow() {
     window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
 }
 
-void Application::createInstance() {
+void Application::getRequiredGLFWExtensions(uint32_t & glfwExtensionCount, char const ** & glfwExtensions) {
     // Get the required instance extensions from GLFW
-    uint32_t glfwExtensionCount;
-    const char ** glfwExtensions {glfwGetRequiredInstanceExtensions(&glfwExtensionCount)};
+    char const ** glfwExtensions {glfwGetRequiredInstanceExtensions(&glfwExtensionCount)};
 
     // Check if the required GLFW extensions are supported by the Vulkan implementation
     vk::ResultValue<std::vector<vk::ExtensionProperties>> resultValueExtensionProperties {context.enumerateInstanceExtensionProperties()};
@@ -68,6 +67,12 @@ void Application::createInstance() {
             throw std::runtime_error("Required GLFW extension not supported: " + std::string(glfwExtensions[i]));
         }
     }
+}
+
+void Application::createInstance() {
+    uint32_t glfwExtensionCount;
+    char const ** glfwExtensions;
+    getRequiredGLFWExtensions(glfwExtensionCount, glfwExtensions);
 
     constexpr vk::ApplicationInfo appInfo {
         .pApplicationName = "Application",
