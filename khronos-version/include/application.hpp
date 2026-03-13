@@ -27,6 +27,16 @@ private:
     vk::raii::Context context;
     vk::raii::Instance instance = nullptr;
 
+    #ifdef NDEBUG
+    const bool enableValidationLayers {false};
+    #else
+    const bool enableValidationLayers {true};
+    #endif
+
+    std::vector<char const *> const validationLayers {
+        "VK_LAYER_KHRONOS_validation"
+    };
+
     void initVulkan();
     void mainLoop();
     void cleanup();
@@ -34,5 +44,6 @@ private:
     void initWindow();
 
     void getRequiredGLFWExtensions(uint32_t & glfwExtensionCount, char const ** & glfwExtensions);
+    void getRequiredValidationLayers(std::vector<char const *> & requiredValidationLayers);
     void createInstance();
 };

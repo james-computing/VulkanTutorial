@@ -70,10 +70,47 @@ void Application::getRequiredGLFWExtensions(uint32_t & glfwExtensionCount, char 
     }
 }
 
+void Application::getRequiredValidationLayers(std::vector<char const *> & requiredValidationLayers) {
+    // Get the required validation layers
+    if (enableValidationLayers) {
+        requiredValidationLayers.assign(validationLayers.begin(), validationLayers.end());
+    }
+
+    // Check if the required layers are supported by the Vulkan implementation
+    vk::ResultValue<std::vector<vk::LayerProperties>> resultValueLayerProperties {context.enumerateInstanceLayerProperties()};
+    if (!resultValueLayerProperties.has_value()) {
+        std::cerr << "Failed to enumerate instance layer properties";
+        return;
+    }
+
+    std::vector<vk::LayerProperties> layerProperties {resultValueLayerProperties.value};
+
+    auto unsupportedLayerIterator {
+        std::ranges::find_if(
+            requiredValidationLayers,
+            [&layerProperties] (char const * const &requiredValidationLayer) -> bool {
+                return std::ranges::none_of(
+                    layerProperties,
+                    [requiredValidationLayer] (vk::LayerProperties const & layerProperty) -> bool {
+                        return strcmp(layerProperty.layerName, requiredValidationLayer) == 0;
+                    }
+                );
+            }
+        )
+    };
+
+    if (unsupportedLayerIterator != requiredValidationLayers.end()) {
+        throw std::runtime_error("Required layer not supported: " + std::string(*unsupportedLayerIterator));
+    }
+}
+
 void Application::createInstance() {
     uint32_t glfwExtensionCount;
     char const ** glfwExtensions;
     getRequiredGLFWExtensions(glfwExtensionCount, glfwExtensions);
+
+    std::vector<char const *> requiredValidationLayers;
+    getRequiredValidationLayers(requiredValidationLayers);
 
     constexpr vk::ApplicationInfo appInfo {
         .pApplicationName = "Application",
