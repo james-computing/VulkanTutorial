@@ -25,7 +25,7 @@ private:
     GLFWwindow * window;
 
     vk::raii::Context context;
-    vk::raii::Instance instance = nullptr;
+    vk::raii::Instance instance {nullptr};
 
     #ifdef NDEBUG
     const bool enableValidationLayers {false};
@@ -37,6 +37,8 @@ private:
         "VK_LAYER_KHRONOS_validation"
     };
 
+    vk::raii::DebugUtilsMessengerEXT debugMessenger {nullptr};
+
     void initVulkan();
     void mainLoop();
     void cleanup();
@@ -46,4 +48,13 @@ private:
     std::vector<char const *> getRequiredGLFWExtensions();
     std::vector<char const *> getRequiredValidationLayers();
     void createInstance();
+
+    static VKAPI_ATTR vk::Bool32 VKAPI_CALL debugCallback(
+        vk::DebugUtilsMessageSeverityFlagBitsEXT        severity,
+        vk::DebugUtilsMessageTypeFlagsEXT               type,
+        vk::DebugUtilsMessengerCallbackDataEXT const *  pCallBackData,
+        void *                                          pUserData
+    );
+
+    void setupDebugMessenger();
 };

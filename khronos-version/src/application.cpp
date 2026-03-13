@@ -9,6 +9,7 @@ void Application::run() {
 
 void Application::initVulkan() {
     createInstance();
+    setupDebugMessenger();
 }
 
 void Application::mainLoop() {
@@ -49,16 +50,16 @@ std::vector<char const *> Application::getRequiredGLFWExtensions() {
     }
 
     // Check if the required GLFW extensions are supported by the Vulkan implementation
-    vk::ResultValue<std::vector<vk::ExtensionProperties>> resultValueExtensionProperties {context.enumerateInstanceExtensionProperties()};
+    vk::ResultValue<std::vector<vk::ExtensionProperties>> const resultValueExtensionProperties {context.enumerateInstanceExtensionProperties()};
     if (!resultValueExtensionProperties.has_value()) {
         throw std::runtime_error("Failed to get extension properties in createInstance.");
     }
 
-    std::vector<vk::ExtensionProperties> extensionProperties {resultValueExtensionProperties.value};
+    std::vector<vk::ExtensionProperties> const extensionProperties {resultValueExtensionProperties.value};
 
     // Print available extensions
     std::cout << "available extensions:\n";
-    for (const auto & extensionProperty : extensionProperties) {
+    for (vk::ExtensionProperties const & extensionProperty : extensionProperties) {
         std::cout << '\t' << extensionProperty.extensionName << '\n';
     }
 
@@ -91,12 +92,12 @@ std::vector<char const *> Application::getRequiredValidationLayers() {
     }
 
     // Check if the required layers are supported by the Vulkan implementation
-    vk::ResultValue<std::vector<vk::LayerProperties>> resultValueLayerProperties {context.enumerateInstanceLayerProperties()};
+    vk::ResultValue<std::vector<vk::LayerProperties>> const resultValueLayerProperties {context.enumerateInstanceLayerProperties()};
     if (!resultValueLayerProperties.has_value()) {
         throw std::runtime_error("Failed to enumerate instance layer properties");
     }
 
-    std::vector<vk::LayerProperties> layerProperties {resultValueLayerProperties.value};
+    std::vector<vk::LayerProperties> const layerProperties {resultValueLayerProperties.value};
 
     // Find if there is a required validation layer that is none of the layer properties
     auto unsupportedLayerIterator {
@@ -121,10 +122,10 @@ std::vector<char const *> Application::getRequiredValidationLayers() {
 }
 
 void Application::createInstance() {
-    std::vector<char const *> requiredGLFWExtensions = getRequiredGLFWExtensions();
-    std::vector<char const *> requiredValidationLayers = getRequiredValidationLayers();
+    std::vector<char const *> const requiredGLFWExtensions = getRequiredGLFWExtensions();
+    std::vector<char const *> const requiredValidationLayers = getRequiredValidationLayers();
 
-    constexpr vk::ApplicationInfo appInfo {
+    constexpr vk::ApplicationInfo const appInfo {
         .pApplicationName = "Application",
         .applicationVersion = VK_MAKE_API_VERSION(1, 0, 0, 0), // VK_MAKE_VERSION is deprecated
         .pEngineName = "No Engine",
@@ -132,7 +133,7 @@ void Application::createInstance() {
         .apiVersion = vk::ApiVersion14
     };
 
-    vk::InstanceCreateInfo createInfo {
+    vk::InstanceCreateInfo const createInfo {
         .pApplicationInfo = &appInfo,
         .enabledLayerCount = static_cast<uint32_t>(requiredValidationLayers.size()),
         .ppEnabledLayerNames = requiredValidationLayers.data(),
@@ -147,4 +148,51 @@ void Application::createInstance() {
     }
 
     instance = std::move(resultValueInstance.value);
+}
+
+VKAPI_ATTR vk::Bool32 VKAPI_CALL Application::debugCallback(
+    vk::DebugUtilsMessageSeverityFlagBitsEXT        severity,
+    vk::DebugUtilsMessageTypeFlagsEXT               type,
+    vk::DebugUtilsMessengerCallbackDataEXT const *  pCallBackData,
+    void *                                          pUserData
+) {
+    std::cerr << "validation layer: type " << vk::to_string(type) << " msg: " << pCallBackData->pMessage << std::endl;
+
+    return vk::False;
+}
+
+void Application::setupDebugMessenger() {
+    if (!enableValidationLayers) {
+        return;
+    }
+
+    vk::DebugUtilsMessageSeverityFlagsEXT const severityFlags(
+        vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose |
+        vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning |
+        vk::DebugUtilsMessageSeverityFlagBitsEXT::eError
+    );
+
+    vk::DebugUtilsMessageTypeFlagsEXT const messageTypeFlags(
+        vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral |
+        vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance |
+        vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation
+    );
+
+    vk::DebugUtilsMessengerCreateInfoEXT const debugUtilsMessengerCreateInfoEXT{
+        .messageSeverity = severityFlags,
+        .messageType = messageTypeFlags,
+        .pfnUserCallback = &debugCallback
+    };
+
+    vk::ResultValue<vk::raii::DebugUtilsMessengerEXT> resultValue {instance.createDebugUtilsMessengerEXT(
+        debugUtilsMessengerCreateInfoEXT,
+        nullptr
+    )};
+
+    if (!resultValue.has_value()) {
+        std::cerr << "Failed to create debug messenger" << std::endl;
+        return;
+    }
+
+    debugMessenger = std::move(resultValue.value);
 }
