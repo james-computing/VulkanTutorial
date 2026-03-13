@@ -236,8 +236,7 @@ bool Application::isDeviceSuitable(vk::raii::PhysicalDevice const & physicalDevi
         std::ranges::any_of(
             queueFamilies,
             [] (vk::QueueFamilyProperties const &qfp) -> bool {
-                // !! is to cast to bool
-                return !!(qfp.queueFlags & vk::QueueFlagBits::eGraphics);
+                return (qfp.queueFlags & vk::QueueFlagBits::eGraphics) != static_cast<vk::QueueFlags>(0);
             }
         )
     };
@@ -294,4 +293,69 @@ bool Application::isDeviceSuitable(vk::raii::PhysicalDevice const & physicalDevi
     }
 
     return false;*/
+}
+
+void Application::createLogicalDevice() {
+    std::vector<vk::QueueFamilyProperties> const queueFamilyProperties {
+        physicalDevice.getQueueFamilyProperties()
+    };
+
+    // Find first queue with graphics support and store its index
+    bool foundGraphicsQueue {false};
+    uint32_t graphicsIndex {0};
+    size_t const queueFamilyPropertiesSize {queueFamilyProperties.size()};
+    for (; graphicsIndex < queueFamilyPropertiesSize; ++graphicsIndex) {
+        if ((queueFamilyProperties[graphicsIndex].queueFlags & vk::QueueFlagBits::eGraphics) != static_cast<vk::QueueFlags>(0)) {
+            foundGraphicsQueue = true;
+            break;
+        }
+    }
+
+    if (!foundGraphicsQueue) {
+        throw std::runtime_error("Failed to find queue with graphics support");
+    }
+
+    float constexpr queuePriority {0.5f};
+    vk::DeviceQueueCreateInfo const deviceQueueCreateInfo {
+        .queueFamilyIndex = graphicsIndex,
+        .queueCount = 1,
+        .pQueuePriorities = &queuePriority
+    };
+
+    vk::PhysicalDeviceFeatures constexpr deviceFeatures;
+
+    // Create a chain of featured structures.
+    // Vulkan uses multiple features by chaining the features and then passing the first feature of the chain.
+    // In C, the chain is constructed using the pNext property.
+    vk::StructureChain<
+        vk::PhysicalDeviceFeatures2,
+        vk::PhysicalDeviceVulkan13Features,
+        vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT
+    > const featureChain {
+        {},
+        {.dynamicRendering = true},
+        {.extendedDynamicState = true}
+    };
+
+    std::vector<char const *> const requiredDeviceExtensions {
+        vk::KHRSwapchainExtensionName
+    };
+
+    vk::DeviceCreateInfo const deviceCreateInfo {
+        .pNext = &featureChain.get<vk::PhysicalDeviceFeatures2>(),
+        .queueCreateInfoCount = 1,
+        .pQueueCreateInfos = &deviceQueueCreateInfo,
+        .enabledExtensionCount = static_cast<uint32_t>(requiredDeviceExtensions.size()),
+        .ppEnabledExtensionNames = requiredDeviceExtensions.data()
+    };
+
+    vk::ResultValue<vk::raii::Device> resultValueDevice {physicalDevice.createDevice(deviceCreateInfo)};
+    if (!resultValueDevice.has_value()) {
+        std::cerr << "Failed to create logical device";
+        return;
+    }
+
+    device = std::move(resultValueDevice.value);
+
+    graphicsQueue = device.getQueue(graphicsIndex, 0);
 }

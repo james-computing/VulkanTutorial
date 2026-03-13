@@ -42,6 +42,10 @@ private:
 
     vk::raii::PhysicalDevice physicalDevice {nullptr};
 
+    vk::raii::Device device {nullptr}; // logical device
+
+    vk::raii::Queue graphicsQueue;
+
     /////////////////////////////////////// METHODS //////////////////////////////////////////////////
 
     void initVulkan();
@@ -65,4 +69,6 @@ private:
 
     void pickPhysicalDevice();
     bool isDeviceSuitable(vk::raii::PhysicalDevice const & physicalDevice);
+
+    void createLogicalDevice();
 };
