@@ -34,15 +34,19 @@ void Application::initWindow() {
     window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
 }
 
-void Application::getRequiredGLFWExtensions(uint32_t & glfwExtensionCount, char const ** & glfwExtensions) {
+std::vector<char const *> Application::getRequiredGLFWExtensions() {
     // Get the required instance extensions from GLFW
+    uint32_t glfwExtensionCount;
+    char const ** glfwExtensions;
     glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+
+    // Replace glfwExtensions by a vector
+    std::vector<char const *> requiredGLFWExtensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
 
     // Check if the required GLFW extensions are supported by the Vulkan implementation
     vk::ResultValue<std::vector<vk::ExtensionProperties>> resultValueExtensionProperties {context.enumerateInstanceExtensionProperties()};
     if (!resultValueExtensionProperties.has_value()) {
-        std::cerr << "Failed to get extension properties in createInstance.";
-        return;
+        throw std::runtime_error("Failed to get extension properties in createInstance.");
     }
 
     std::vector<vk::ExtensionProperties> extensionProperties {resultValueExtensionProperties.value};
@@ -53,25 +57,30 @@ void Application::getRequiredGLFWExtensions(uint32_t & glfwExtensionCount, char 
         std::cout << '\t' << extensionProperty.extensionName << '\n';
     }
 
-    for (uint32_t i {0}; i < glfwExtensionCount; ++i) {
-        // Check if i-th required extension is supported
-        bool notSupported {
-            std::ranges::none_of(
-            extensionProperties,
-            [glfwExtension = glfwExtensions[i]](vk::ExtensionProperties const & extensionProperty) -> bool {
-                return strcmp(extensionProperty.extensionName, glfwExtension) == 0;
-            })
-        };
+    // Find if there is a required GLFW extension which is none of the extension properties
+    auto unsupportedIterator {
+        std::ranges::find_if(
+            requiredGLFWExtensions,
+            [extensionProperties](char const * const & requiredGLFWExtension) -> bool {
+                return std::ranges::none_of(
+                extensionProperties,
+                [requiredGLFWExtension](vk::ExtensionProperties const & extensionProperty) -> bool {
+                    return strcmp(extensionProperty.extensionName, requiredGLFWExtension) == 0;
+                });
+            }
+        )
+    };
 
-        if (notSupported)
-        {
-            throw std::runtime_error("Required GLFW extension not supported: " + std::string(glfwExtensions[i]));
-        }
+    if (unsupportedIterator != requiredGLFWExtensions.end()) {
+        std::cerr << "Required GLFW extension not supported: " + std::string(*unsupportedIterator);
     }
+
+    return requiredGLFWExtensions;
 }
 
-void Application::getRequiredValidationLayers(std::vector<char const *> & requiredValidationLayers) {
+std::vector<char const *> Application::getRequiredValidationLayers() {
     // Get the required validation layers
+    std::vector<char const *> requiredValidationLayers;
     if (enableValidationLayers) {
         requiredValidationLayers.assign(validationLayers.begin(), validationLayers.end());
     }
@@ -79,12 +88,12 @@ void Application::getRequiredValidationLayers(std::vector<char const *> & requir
     // Check if the required layers are supported by the Vulkan implementation
     vk::ResultValue<std::vector<vk::LayerProperties>> resultValueLayerProperties {context.enumerateInstanceLayerProperties()};
     if (!resultValueLayerProperties.has_value()) {
-        std::cerr << "Failed to enumerate instance layer properties";
-        return;
+        throw std::runtime_error("Failed to enumerate instance layer properties");
     }
 
     std::vector<vk::LayerProperties> layerProperties {resultValueLayerProperties.value};
 
+    // Find if there is a required validation layer that is none of the layer properties
     auto unsupportedLayerIterator {
         std::ranges::find_if(
             requiredValidationLayers,
@@ -102,15 +111,13 @@ void Application::getRequiredValidationLayers(std::vector<char const *> & requir
     if (unsupportedLayerIterator != requiredValidationLayers.end()) {
         throw std::runtime_error("Required layer not supported: " + std::string(*unsupportedLayerIterator));
     }
+
+    return requiredValidationLayers;
 }
 
 void Application::createInstance() {
-    uint32_t glfwExtensionCount;
-    char const ** glfwExtensions;
-    getRequiredGLFWExtensions(glfwExtensionCount, glfwExtensions);
-
-    std::vector<char const *> requiredValidationLayers;
-    getRequiredValidationLayers(requiredValidationLayers);
+    std::vector<char const *> requiredGLFWExtensions = getRequiredGLFWExtensions();
+    std::vector<char const *> requiredValidationLayers = getRequiredValidationLayers();
 
     constexpr vk::ApplicationInfo appInfo {
         .pApplicationName = "Application",
@@ -124,8 +131,8 @@ void Application::createInstance() {
         .pApplicationInfo = &appInfo,
         .enabledLayerCount = static_cast<uint32_t>(requiredValidationLayers.size()),
         .ppEnabledLayerNames = requiredValidationLayers.data(),
-        .enabledExtensionCount = glfwExtensionCount,
-        .ppEnabledExtensionNames = glfwExtensions
+        .enabledExtensionCount = static_cast<uint32_t>(requiredGLFWExtensions.size()),
+        .ppEnabledExtensionNames = requiredGLFWExtensions.data()
     };
 
     vk::ResultValue<vk::raii::Instance> resultValueInstance {context.createInstance(createInfo, nullptr)};

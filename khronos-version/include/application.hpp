@@ -43,7 +43,8 @@ private:
 
     void initWindow();
 
-    void getRequiredGLFWExtensions(uint32_t & glfwExtensionCount, char const ** & glfwExtensions);
-    void getRequiredValidationLayers(std::vector<char const *> & requiredValidationLayers);
+    std::vector<char const *> getRequiredGLFWExtensions();
+    std::vector<char const *> getRequiredValidationLayers();
+    //std::vector<char const *> getRequiredInstanceExtensions();
     void createInstance();
 };
