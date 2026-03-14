@@ -44,7 +44,9 @@ private:
 
     vk::raii::Device device {nullptr}; // logical device
 
-    vk::raii::Queue graphicsQueue;
+    vk::raii::Queue queue;
+
+    vk::raii::SurfaceKHR surface {nullptr};
 
     /////////////////////////////////////// METHODS //////////////////////////////////////////////////
 
@@ -71,4 +73,6 @@ private:
     bool isDeviceSuitable(vk::raii::PhysicalDevice const & physicalDevice);
 
     void createLogicalDevice();
+
+    void createSurface();
 };

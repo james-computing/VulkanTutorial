@@ -300,24 +300,28 @@ void Application::createLogicalDevice() {
         physicalDevice.getQueueFamilyProperties()
     };
 
-    // Find first queue with graphics support and store its index
-    bool foundGraphicsQueue {false};
-    uint32_t graphicsIndex {0};
+
+    // Find first queue with graphics support which is also capable of presenting to the window,
+    // and store its index.
+    bool foundSuitableQueue {false};
+    uint32_t queueIndex {0};
     size_t const queueFamilyPropertiesSize {queueFamilyProperties.size()};
-    for (; graphicsIndex < queueFamilyPropertiesSize; ++graphicsIndex) {
-        if ((queueFamilyProperties[graphicsIndex].queueFlags & vk::QueueFlagBits::eGraphics) != static_cast<vk::QueueFlags>(0)) {
-            foundGraphicsQueue = true;
+    for (; queueIndex < queueFamilyPropertiesSize; ++queueIndex) {
+        bool supportsGraphics = (queueFamilyProperties[queueIndex].queueFlags & vk::QueueFlagBits::eGraphics) != static_cast<vk::QueueFlags>(0);
+        bool supportsWindowPresentation = physicalDevice.getSurfaceSupportKHR(queueIndex, *surface).value;
+        if (supportsGraphics && supportsWindowPresentation) {
+            foundSuitableQueue = true;
             break;
         }
     }
 
-    if (!foundGraphicsQueue) {
-        throw std::runtime_error("Failed to find queue with graphics support");
+    if (!foundSuitableQueue) {
+        throw std::runtime_error("Failed to find suitable queue");
     }
 
     float constexpr queuePriority {0.5f};
     vk::DeviceQueueCreateInfo const deviceQueueCreateInfo {
-        .queueFamilyIndex = graphicsIndex,
+        .queueFamilyIndex = queueIndex,
         .queueCount = 1,
         .pQueuePriorities = &queuePriority
     };
@@ -357,5 +361,20 @@ void Application::createLogicalDevice() {
 
     device = std::move(resultValueDevice.value);
 
-    graphicsQueue = device.getQueue(graphicsIndex, 0);
+    queue = device.getQueue(queueIndex, 0);
+}
+
+void Application::createSurface() {
+    // C struct
+    VkSurfaceKHR _surface;
+    // C function call
+    VkResult result = glfwCreateWindowSurface(*instance, window, nullptr, &_surface);
+
+    if (result != VkResult::VK_SUCCESS) {
+        std::cerr << "Failed to create window surface";
+        return;
+    }
+
+    // Get a C++ surface from the C _surface
+    surface = vk::raii::SurfaceKHR(instance, _surface);
 }
