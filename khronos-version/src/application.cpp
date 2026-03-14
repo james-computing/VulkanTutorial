@@ -253,7 +253,7 @@ bool Application::isDeviceSuitable(vk::raii::PhysicalDevice const & physicalDevi
 
     std::vector<vk::ExtensionProperties> const availableDeviceExtensions {resultValueExtensionProperties.value};
 
-    bool supportsAllRequiredExtensions {
+    bool const supportsAllRequiredExtensions {
         // All of the required device extensions are any of the available extensions
         std::ranges::all_of(
             requiredDeviceExtensions,
@@ -268,7 +268,7 @@ bool Application::isDeviceSuitable(vk::raii::PhysicalDevice const & physicalDevi
         )
     };
 
-    auto features {
+    auto const features {
         // .template is to tell the compiler to use the method that comes from templates, avoiding ambiguity
         physicalDevice.template getFeatures2<
             vk::PhysicalDeviceFeatures2,
@@ -276,7 +276,7 @@ bool Application::isDeviceSuitable(vk::raii::PhysicalDevice const & physicalDevi
             vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT
         >()
     };
-    bool supportsRequiredFeatures {
+    bool const supportsRequiredFeatures {
         features.template get<vk::PhysicalDeviceVulkan13Features>().dynamicRendering &&
         features.template get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>().extendedDynamicState
     };
