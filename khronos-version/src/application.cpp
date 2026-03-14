@@ -326,7 +326,7 @@ void Application::createLogicalDevice() {
         .pQueuePriorities = &queuePriority
     };
 
-    vk::PhysicalDeviceFeatures constexpr deviceFeatures;
+    //vk::PhysicalDeviceFeatures constexpr deviceFeatures;
 
     // Create a chain of featured structures.
     // Vulkan uses multiple features by chaining the features and then passing the first feature of the chain.
