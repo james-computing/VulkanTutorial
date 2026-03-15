@@ -10,7 +10,10 @@ void Application::run() {
 void Application::initVulkan() {
     createInstance();
     setupDebugMessenger();
+    createSurface();
     pickPhysicalDevice();
+    createLogicalDevice();
+    createSwapChain();
 }
 
 void Application::mainLoop() {
@@ -36,7 +39,7 @@ void Application::initWindow() {
     window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
 }
 
-std::vector<char const *> Application::getRequiredGLFWExtensions() {
+std::vector<char const *> Application::getRequiredGLFWExtensions() const {
     // Get the required instance extensions from GLFW
     uint32_t glfwExtensionCount;
     char const ** glfwExtensions;
@@ -85,7 +88,7 @@ std::vector<char const *> Application::getRequiredGLFWExtensions() {
     return requiredGLFWExtensions;
 }
 
-std::vector<char const *> Application::getRequiredValidationLayers() {
+std::vector<char const *> Application::getRequiredValidationLayers() const {
     // Get the required validation layers
     std::vector<char const *> requiredValidationLayers;
     if (enableValidationLayers) {
@@ -224,7 +227,7 @@ void Application::pickPhysicalDevice() {
     physicalDevice = *deviceIterator;
 }
 
-bool Application::isDeviceSuitable(vk::raii::PhysicalDevice const & physicalDevice) {
+bool Application::isDeviceSuitable(vk::raii::PhysicalDevice const & physicalDevice) const {
     vk::PhysicalDeviceProperties const deviceProperties {physicalDevice.getProperties()};
     vk::PhysicalDeviceFeatures const deviceFeatures {physicalDevice.getFeatures()};
     std::vector<vk::QueueFamilyProperties> const queueFamilies {physicalDevice.getQueueFamilyProperties()};
@@ -300,7 +303,6 @@ void Application::createLogicalDevice() {
         physicalDevice.getQueueFamilyProperties()
     };
 
-
     // Find first queue with graphics support which is also capable of presenting to the window,
     // and store its index.
     bool foundSuitableQueue {false};
@@ -308,7 +310,14 @@ void Application::createLogicalDevice() {
     size_t const queueFamilyPropertiesSize {queueFamilyProperties.size()};
     for (; queueIndex < queueFamilyPropertiesSize; ++queueIndex) {
         bool supportsGraphics = (queueFamilyProperties[queueIndex].queueFlags & vk::QueueFlagBits::eGraphics) != static_cast<vk::QueueFlags>(0);
-        bool supportsWindowPresentation = physicalDevice.getSurfaceSupportKHR(queueIndex, *surface).value;
+        
+        vk::ResultValue<uint32_t> resultValueSupportsWindowPresentation = physicalDevice.getSurfaceSupportKHR(queueIndex, *surface);
+        if (!resultValueSupportsWindowPresentation.has_value()) {
+            std::cerr << "Failed to get surface support";
+            return;
+        }
+        bool supportsWindowPresentation = resultValueSupportsWindowPresentation.value;
+
         if (supportsGraphics && supportsWindowPresentation) {
             foundSuitableQueue = true;
             break;
@@ -362,6 +371,31 @@ void Application::createLogicalDevice() {
     device = std::move(resultValueDevice.value);
 
     queue = device.getQueue(queueIndex, 0);
+
+    vk::ResultValue<vk::SurfaceCapabilitiesKHR> const resultValueSurfaceCapabilities {physicalDevice.getSurfaceCapabilitiesKHR(*surface)};
+    if (!resultValueSurfaceCapabilities.has_value()) {
+        std::cerr << "Failed to get surface capabilities";
+        return;
+    }
+
+    vk::SurfaceCapabilitiesKHR const surfaceCapabilities {resultValueSurfaceCapabilities.value};
+
+    vk::ResultValue<std::vector<vk::SurfaceFormatKHR>> const resultValueAvailableFormats {physicalDevice.getSurfaceFormatsKHR(surface)};
+    if (!resultValueAvailableFormats.has_value()) {
+        std::cerr << "Failed to get surface formats";
+        return;
+    }
+
+    std::vector<vk::SurfaceFormatKHR> const availableFormats {resultValueAvailableFormats.value};
+
+    vk::ResultValue<std::vector<vk::PresentModeKHR>> const resultValueAvailablePresentModes {physicalDevice.getSurfacePresentModesKHR(surface)};
+    if (!resultValueAvailablePresentModes.has_value()) {
+        std::cerr << "Failed to get surface present modes";
+        return;
+    }
+
+    std::vector<vk::PresentModeKHR> const availablePresentModes {resultValueAvailablePresentModes.value};
+
 }
 
 void Application::createSurface() {
@@ -377,4 +411,63 @@ void Application::createSurface() {
 
     // Get a C++ surface from the C _surface
     surface = vk::raii::SurfaceKHR(instance, _surface);
+}
+
+vk::SurfaceFormatKHR Application::chooseSwapSurfaceFormat(std::vector<vk::SurfaceFormatKHR> const & availableFormats) const {
+    auto const formatIterator{
+        std::ranges::find_if(
+            availableFormats,
+            [] (vk::SurfaceFormatKHR const & availableFormat) -> bool {
+                return availableFormat.format == vk::Format::eB8G8R8Srgb && availableFormat.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear;
+            }
+        )
+    };
+
+    if (formatIterator == availableFormats.end()) {
+        return availableFormats[0];
+    } else {
+        return *formatIterator;
+    }
+}
+
+vk::PresentModeKHR Application::chooseSwapPresentModes(std::vector<vk::PresentModeKHR> const & availablePresentModes) const {
+    bool fifoAvailable {false};
+    for (vk::PresentModeKHR const & presentMode : availablePresentModes) {
+        switch (presentMode) {
+            case vk::PresentModeKHR::eMailbox:
+                return vk::PresentModeKHR::eMailbox;
+            case vk::PresentModeKHR::eFifo:
+                fifoAvailable = true;
+                break;
+        }
+    }
+
+    if (fifoAvailable) {
+        return vk::PresentModeKHR::eFifo;
+    }
+    else {
+        throw std::runtime_error("Neither eFifo or eMailbox present modes avaiable"); 
+    }
+}
+
+vk::Extent2D Application::chooseSwapExtent(vk::SurfaceCapabilitiesKHR const & capabilities) const {
+    // If width != max, capabilities.currentExtent already have the correct Extent2D, just return it
+    if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
+        return capabilities.currentExtent;
+    }
+
+    // Otherwise, we can choose an extent.
+    // Width and height must be between the minimum and maximum values allowed, we solve this by clamping.
+    // The width and height must be in pixels, the appropriate values are obtained from the framebuffer size.
+    int width, height;
+    glfwGetFramebufferSize(window, &width, &height);
+
+    return vk::Extent2D {
+        std::clamp<uint32_t>(width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width),
+        std::clamp<uint32_t>(height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height)
+    };
+}
+
+void Application::createSwapChain() const {
+
 }

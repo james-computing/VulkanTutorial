@@ -2,7 +2,9 @@
 
 #include <iostream>
 #include <stdexcept>
-#include <cstdlib>
+#include <cstdlib> // For uint32_t
+#include <limits> // for std::numeric_limits
+#include <algorithm> // for std::clamp
 
 #define VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
 #define VULKAN_HPP_NO_EXCEPTIONS
@@ -44,7 +46,7 @@ private:
 
     vk::raii::Device device {nullptr}; // logical device
 
-    vk::raii::Queue queue;
+    vk::raii::Queue queue {nullptr};
 
     vk::raii::SurfaceKHR surface {nullptr};
 
@@ -56,8 +58,8 @@ private:
 
     void initWindow();
 
-    std::vector<char const *> getRequiredGLFWExtensions();
-    std::vector<char const *> getRequiredValidationLayers();
+    std::vector<char const *> getRequiredGLFWExtensions() const;
+    std::vector<char const *> getRequiredValidationLayers() const;
     void createInstance();
 
     static VKAPI_ATTR vk::Bool32 VKAPI_CALL debugCallback(
@@ -70,9 +72,13 @@ private:
     void setupDebugMessenger();
 
     void pickPhysicalDevice();
-    bool isDeviceSuitable(vk::raii::PhysicalDevice const & physicalDevice);
+    bool isDeviceSuitable(vk::raii::PhysicalDevice const & physicalDevice) const;
 
     void createLogicalDevice();
 
     void createSurface();
+    vk::SurfaceFormatKHR chooseSwapSurfaceFormat(std::vector<vk::SurfaceFormatKHR> const & availableFormats) const;
+    vk::PresentModeKHR chooseSwapPresentModes(std::vector<vk::PresentModeKHR> const & availablePresentModes) const;
+    vk::Extent2D chooseSwapExtent(vk::SurfaceCapabilitiesKHR const & capabilities) const;
+    void createSwapChain() const;
 };
