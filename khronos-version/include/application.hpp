@@ -91,4 +91,6 @@ private:
     void createSwapChain();
 
     void createImageViews();
+
+    void createGraphicsPipeline() const;
 };
