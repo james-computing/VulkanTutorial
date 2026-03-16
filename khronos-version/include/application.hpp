@@ -7,7 +7,7 @@
 #include <algorithm> // for std::clamp
 
 #define VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
-#define VULKAN_HPP_NO_EXCEPTIONS
+//#define VULKAN_HPP_NO_EXCEPTIONS
 #if defined(__INTELLISENSE__) || !defined(USE_CPP20_MODULES)
 #include <vulkan/vulkan_raii.hpp>
 #else
@@ -25,7 +25,7 @@ private:
     uint32_t const WIDTH {800};
     uint32_t const HEIGHT {600};
 
-    GLFWwindow * window;
+    GLFWwindow * window {nullptr};
 
     vk::raii::Context context;
     vk::raii::Instance instance {nullptr};
@@ -49,6 +49,11 @@ private:
     vk::raii::Queue queue {nullptr};
 
     vk::raii::SurfaceKHR surface {nullptr};
+
+    vk::Extent2D swapChainExtent;
+    vk::SurfaceFormatKHR swapChainSurfaceFormat;
+    vk::raii::SwapchainKHR swapChain {nullptr};
+    std::vector<vk::Image> swapChainImages {nullptr};
 
     /////////////////////////////////////// METHODS //////////////////////////////////////////////////
 
@@ -78,7 +83,8 @@ private:
 
     void createSurface();
     vk::SurfaceFormatKHR chooseSwapSurfaceFormat(std::vector<vk::SurfaceFormatKHR> const & availableFormats) const;
-    vk::PresentModeKHR chooseSwapPresentModes(std::vector<vk::PresentModeKHR> const & availablePresentModes) const;
+    vk::PresentModeKHR chooseSwapPresentMode(std::vector<vk::PresentModeKHR> const & availablePresentModes) const;
     vk::Extent2D chooseSwapExtent(vk::SurfaceCapabilitiesKHR const & capabilities) const;
-    void createSwapChain() const;
+    uint32_t chooseSwapImageCount(vk::SurfaceCapabilitiesKHR const & surfaceCapabilities) const;
+    void createSwapChain();
 };

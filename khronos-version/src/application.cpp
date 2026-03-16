@@ -54,12 +54,9 @@ std::vector<char const *> Application::getRequiredGLFWExtensions() const {
     }
 
     // Check if the required GLFW extensions are supported by the Vulkan implementation
-    vk::ResultValue<std::vector<vk::ExtensionProperties>> const resultValueExtensionProperties {context.enumerateInstanceExtensionProperties()};
-    if (!resultValueExtensionProperties.has_value()) {
-        throw std::runtime_error("Failed to get extension properties in createInstance.");
-    }
-
-    std::vector<vk::ExtensionProperties> const extensionProperties {resultValueExtensionProperties.value};
+    
+    // try catch?
+    std::vector<vk::ExtensionProperties> const extensionProperties {context.enumerateInstanceExtensionProperties()};
 
     // Print available extensions
     std::cout << "available extensions:\n";
@@ -95,13 +92,8 @@ std::vector<char const *> Application::getRequiredValidationLayers() const {
         requiredValidationLayers.assign(validationLayers.begin(), validationLayers.end());
     }
 
-    // Check if the required layers are supported by the Vulkan implementation
-    vk::ResultValue<std::vector<vk::LayerProperties>> const resultValueLayerProperties {context.enumerateInstanceLayerProperties()};
-    if (!resultValueLayerProperties.has_value()) {
-        throw std::runtime_error("Failed to enumerate instance layer properties");
-    }
-
-    std::vector<vk::LayerProperties> const layerProperties {resultValueLayerProperties.value};
+    // try catch?
+    std::vector<vk::LayerProperties> const layerProperties {context.enumerateInstanceLayerProperties()};
 
     // Find if there is a required validation layer that is none of the layer properties
     auto unsupportedLayerIterator {
@@ -145,13 +137,8 @@ void Application::createInstance() {
         .ppEnabledExtensionNames = requiredGLFWExtensions.data()
     };
 
-    vk::ResultValue<vk::raii::Instance> resultValueInstance {context.createInstance(createInfo, nullptr)};
-    if (!resultValueInstance.has_value()) {
-        std::cerr << "Failed to create Vulkan instance in Application::createInstance";
-        return;
-    }
-
-    instance = std::move(resultValueInstance.value);
+    // try catch?
+    instance = vk::raii::Instance(context, createInfo);
 }
 
 VKAPI_ATTR vk::Bool32 VKAPI_CALL Application::debugCallback(
@@ -188,26 +175,13 @@ void Application::setupDebugMessenger() {
         .pfnUserCallback = &debugCallback
     };
 
-    vk::ResultValue<vk::raii::DebugUtilsMessengerEXT> resultValue {instance.createDebugUtilsMessengerEXT(
-        debugUtilsMessengerCreateInfoEXT,
-        nullptr
-    )};
-
-    if (!resultValue.has_value()) {
-        std::cerr << "Failed to create debug messenger" << std::endl;
-        return;
-    }
-
-    debugMessenger = std::move(resultValue.value);
+    // try catch?
+    debugMessenger = instance.createDebugUtilsMessengerEXT(debugUtilsMessengerCreateInfoEXT);
 }
 
 void Application::pickPhysicalDevice() {
-    vk::ResultValue<std::vector<vk::raii::PhysicalDevice>> const resultValue {instance.enumeratePhysicalDevices()};
-    if (!resultValue.has_value()) {
-        throw std::runtime_error("Failed to enumerate physical devices");
-    }
-
-    std::vector<vk::raii::PhysicalDevice> const physicalDevices {resultValue.value};
+    // try catch?
+    std::vector<vk::raii::PhysicalDevice> const physicalDevices {instance.enumeratePhysicalDevices()};
     
     auto const deviceIterator {
         // Find if there is some suitable device
@@ -244,17 +218,8 @@ bool Application::isDeviceSuitable(vk::raii::PhysicalDevice const & physicalDevi
         )
     };
 
-    //
-
-    vk::ResultValue<std::vector<vk::ExtensionProperties>> const resultValueExtensionProperties {
-        physicalDevice.enumerateDeviceExtensionProperties()
-    };
-    if (!resultValueExtensionProperties.has_value()) {
-        std::cerr << "Failed to enumerate device extension properties";
-        return false;
-    }
-
-    std::vector<vk::ExtensionProperties> const availableDeviceExtensions {resultValueExtensionProperties.value};
+    // try catch?
+    std::vector<vk::ExtensionProperties> const availableDeviceExtensions {physicalDevice.enumerateDeviceExtensionProperties()};
 
     bool const supportsAllRequiredExtensions {
         // All of the required device extensions are any of the available extensions
@@ -311,12 +276,8 @@ void Application::createLogicalDevice() {
     for (; queueIndex < queueFamilyPropertiesSize; ++queueIndex) {
         bool supportsGraphics = (queueFamilyProperties[queueIndex].queueFlags & vk::QueueFlagBits::eGraphics) != static_cast<vk::QueueFlags>(0);
         
-        vk::ResultValue<uint32_t> resultValueSupportsWindowPresentation = physicalDevice.getSurfaceSupportKHR(queueIndex, *surface);
-        if (!resultValueSupportsWindowPresentation.has_value()) {
-            std::cerr << "Failed to get surface support";
-            return;
-        }
-        bool supportsWindowPresentation = resultValueSupportsWindowPresentation.value;
+        // try catch?
+        bool supportsWindowPresentation = physicalDevice.getSurfaceSupportKHR(queueIndex, *surface);
 
         if (supportsGraphics && supportsWindowPresentation) {
             foundSuitableQueue = true;
@@ -362,40 +323,10 @@ void Application::createLogicalDevice() {
         .ppEnabledExtensionNames = requiredDeviceExtensions.data()
     };
 
-    vk::ResultValue<vk::raii::Device> resultValueDevice {physicalDevice.createDevice(deviceCreateInfo)};
-    if (!resultValueDevice.has_value()) {
-        std::cerr << "Failed to create logical device";
-        return;
-    }
+    // try catch?
+    device = vk::raii::Device(physicalDevice, deviceCreateInfo);
 
-    device = std::move(resultValueDevice.value);
-
-    queue = device.getQueue(queueIndex, 0);
-
-    vk::ResultValue<vk::SurfaceCapabilitiesKHR> const resultValueSurfaceCapabilities {physicalDevice.getSurfaceCapabilitiesKHR(*surface)};
-    if (!resultValueSurfaceCapabilities.has_value()) {
-        std::cerr << "Failed to get surface capabilities";
-        return;
-    }
-
-    vk::SurfaceCapabilitiesKHR const surfaceCapabilities {resultValueSurfaceCapabilities.value};
-
-    vk::ResultValue<std::vector<vk::SurfaceFormatKHR>> const resultValueAvailableFormats {physicalDevice.getSurfaceFormatsKHR(surface)};
-    if (!resultValueAvailableFormats.has_value()) {
-        std::cerr << "Failed to get surface formats";
-        return;
-    }
-
-    std::vector<vk::SurfaceFormatKHR> const availableFormats {resultValueAvailableFormats.value};
-
-    vk::ResultValue<std::vector<vk::PresentModeKHR>> const resultValueAvailablePresentModes {physicalDevice.getSurfacePresentModesKHR(surface)};
-    if (!resultValueAvailablePresentModes.has_value()) {
-        std::cerr << "Failed to get surface present modes";
-        return;
-    }
-
-    std::vector<vk::PresentModeKHR> const availablePresentModes {resultValueAvailablePresentModes.value};
-
+    queue = vk::raii::Queue(device, queueIndex, 0);
 }
 
 void Application::createSurface() {
@@ -430,7 +361,7 @@ vk::SurfaceFormatKHR Application::chooseSwapSurfaceFormat(std::vector<vk::Surfac
     }
 }
 
-vk::PresentModeKHR Application::chooseSwapPresentModes(std::vector<vk::PresentModeKHR> const & availablePresentModes) const {
+vk::PresentModeKHR Application::chooseSwapPresentMode(std::vector<vk::PresentModeKHR> const & availablePresentModes) const {
     bool fifoAvailable {false};
     for (vk::PresentModeKHR const & presentMode : availablePresentModes) {
         switch (presentMode) {
@@ -468,6 +399,52 @@ vk::Extent2D Application::chooseSwapExtent(vk::SurfaceCapabilitiesKHR const & ca
     };
 }
 
-void Application::createSwapChain() const {
+uint32_t Application::chooseSwapImageCount(vk::SurfaceCapabilitiesKHR const & surfaceCapabilities) const {
+    // Pick at least 3 images, and at least the minimum + 1
+    uint32_t minImageCount {std::max(3u, surfaceCapabilities.minImageCount + 1)};
 
+    // Don't pass the maximum
+    bool const thereIsAMax {surfaceCapabilities.maxImageCount > 0};
+    if (thereIsAMax && surfaceCapabilities.maxImageCount < minImageCount) {
+        minImageCount = surfaceCapabilities.maxImageCount;
+    }
+
+    return minImageCount;
+}
+
+void Application::createSwapChain() {
+    // Same from createLogicalDevice
+    // try catch?
+    vk::SurfaceCapabilitiesKHR const surfaceCapabilities {physicalDevice.getSurfaceCapabilitiesKHR(*surface)};
+    swapChainExtent = chooseSwapExtent(surfaceCapabilities);
+    uint32_t const minImageCount {chooseSwapImageCount(surfaceCapabilities)};
+
+    // Same from createLogicalDevice
+    // try catch?
+    std::vector<vk::SurfaceFormatKHR> const availableFormats {physicalDevice.getSurfaceFormatsKHR(*surface)};
+    swapChainSurfaceFormat = chooseSwapSurfaceFormat(availableFormats);
+
+    // try catch?
+    std::vector<vk::PresentModeKHR> const availablePresentModes = physicalDevice.getSurfacePresentModesKHR(*surface);
+    vk::PresentModeKHR const presentMode {chooseSwapPresentMode(availablePresentModes)};
+
+    vk::SwapchainCreateInfoKHR const swapChainCreateInfo {
+        .surface = *surface,
+        .minImageCount = minImageCount,
+        .imageFormat = swapChainSurfaceFormat.format,
+        .imageColorSpace = swapChainSurfaceFormat.colorSpace,
+        .imageExtent = swapChainExtent,
+        .imageArrayLayers = 1, // because not a stereoscopic 3D application
+        .imageUsage = vk::ImageUsageFlagBits::eColorAttachment,
+        .imageSharingMode = vk::SharingMode::eExclusive,
+        .preTransform = surfaceCapabilities.currentTransform, // don't apply any transformation
+        .compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque,
+        .presentMode = presentMode,
+        .clipped = true
+    };
+    
+    // try catch?
+    swapChain = vk::raii::SwapchainKHR(device, swapChainCreateInfo);
+    // try catch?
+    swapChainImages = swapChain.getImages();
 }
