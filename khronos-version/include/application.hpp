@@ -53,7 +53,8 @@ private:
     vk::Extent2D swapChainExtent;
     vk::SurfaceFormatKHR swapChainSurfaceFormat;
     vk::raii::SwapchainKHR swapChain {nullptr};
-    std::vector<vk::Image> swapChainImages {nullptr};
+    std::vector<vk::Image> swapChainImages;
+    std::vector<vk::raii::ImageView> swapChainImageViews;
 
     /////////////////////////////////////// METHODS //////////////////////////////////////////////////
 
@@ -82,9 +83,12 @@ private:
     void createLogicalDevice();
 
     void createSurface();
+
     vk::SurfaceFormatKHR chooseSwapSurfaceFormat(std::vector<vk::SurfaceFormatKHR> const & availableFormats) const;
     vk::PresentModeKHR chooseSwapPresentMode(std::vector<vk::PresentModeKHR> const & availablePresentModes) const;
     vk::Extent2D chooseSwapExtent(vk::SurfaceCapabilitiesKHR const & capabilities) const;
     uint32_t chooseSwapImageCount(vk::SurfaceCapabilitiesKHR const & surfaceCapabilities) const;
     void createSwapChain();
+
+    void createImageViews();
 };

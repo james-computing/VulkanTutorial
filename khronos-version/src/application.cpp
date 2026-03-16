@@ -448,3 +448,26 @@ void Application::createSwapChain() {
     // try catch?
     swapChainImages = swapChain.getImages();
 }
+
+void Application::createImageViews() {
+    assert(swapChainImageViews.empty());
+
+    vk::ImageViewCreateInfo imageViewCreateInfo {
+        .viewType = vk::ImageViewType::e2D,
+        .format = swapChainSurfaceFormat.format,
+        .subresourceRange = {
+            .aspectMask = vk::ImageAspectFlagBits::eColor,
+            .baseMipLevel = 0,
+            .levelCount = 1,
+            .baseArrayLayer = 0,
+            .layerCount = 1
+        }
+    };
+
+    for (vk::Image & image : swapChainImages) {
+        imageViewCreateInfo.image = image;
+        // vk::raii::CreateImageView is implicit? Compiler says the function doesn't exists
+        swapChainImageViews.emplace_back(device, imageViewCreateInfo);
+    }
+
+}
