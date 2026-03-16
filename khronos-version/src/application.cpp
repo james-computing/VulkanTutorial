@@ -14,6 +14,7 @@ void Application::initVulkan() {
     pickPhysicalDevice();
     createLogicalDevice();
     createSwapChain();
+    createImageViews();
 }
 
 void Application::mainLoop() {
@@ -469,5 +470,4 @@ void Application::createImageViews() {
         // vk::raii::CreateImageView is implicit? Compiler says the function doesn't exists
         swapChainImageViews.emplace_back(device, imageViewCreateInfo);
     }
-
 }
