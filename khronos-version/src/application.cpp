@@ -596,12 +596,8 @@ void Application::createGraphicsPipeline() {
         .basePipelineIndex =    -1 // optional
     };
 
-    try{
-        graphicsPipeline = vk::raii::Pipeline(device, nullptr, graphicsPipelineCreateInfo);
-    }
-    catch(std::exception const & e){
-        std::cerr << "\tError: " << e.what() << std::endl;
-    }
+    // try catch?
+    graphicsPipeline = vk::raii::Pipeline(device, nullptr, graphicsPipelineCreateInfo);
 }
 
 std::vector<char> Application::readFile(std::string const & filename) {
