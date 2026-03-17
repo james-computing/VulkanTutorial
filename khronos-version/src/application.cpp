@@ -474,5 +474,26 @@ void Application::createImageViews() {
 }
 
 void Application::createGraphicsPipeline() const {
-    
+    std::vector<char> const shaderCode {readFile("shaders/slang.spv")};
 }
+
+std::vector<char> Application::readFile(std::string const & filename) {
+        // ate = start reading at the end of the file. This is used to get the file size.
+        // binary is to read as binary, avoiding text transformations.
+        std::ifstream file(filename, std::ios::ate | std::ios::binary);
+
+        if (!file.is_open()) {
+            throw std::runtime_error("Failed to open file");
+        }
+
+        // Create a buffer with the file size
+        std::streampos const fileEndPos {file.tellg()};
+        std::vector<char> buffer(fileEndPos);
+        // Go to beggining of the file
+        file.seekg(0, std::ios::beg);
+        // Read the whole file to the buffer
+        file.read(buffer.data(), static_cast<std::streamsize>(buffer.size()));
+        file.close();
+
+        return buffer;
+    }

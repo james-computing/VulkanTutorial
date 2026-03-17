@@ -5,6 +5,7 @@
 #include <cstdlib> // For uint32_t
 #include <limits> // for std::numeric_limits
 #include <algorithm> // for std::clamp
+#include <fstream> // read shader file
 
 #define VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
 //#define VULKAN_HPP_NO_EXCEPTIONS
@@ -93,4 +94,6 @@ private:
     void createImageViews();
 
     void createGraphicsPipeline() const;
+
+    static std::vector<char> readFile(std::string const & filename);
 };
