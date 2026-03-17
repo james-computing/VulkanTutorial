@@ -149,7 +149,9 @@ VKAPI_ATTR vk::Bool32 VKAPI_CALL Application::debugCallback(
     vk::DebugUtilsMessengerCallbackDataEXT const *  pCallBackData,
     void *                                          pUserData
 ) {
-    std::cerr << "validation layer: type " << vk::to_string(type) << " msg: " << pCallBackData->pMessage << std::endl;
+    std::cerr << "\nvalidation layer:\n" <<
+                    "\ttype " << vk::to_string(type) << '\n' <<
+                    "\tmsg: " << pCallBackData->pMessage << std::endl;
 
     return vk::False;
 }
@@ -243,12 +245,14 @@ bool Application::isDeviceSuitable(vk::raii::PhysicalDevice const & physicalDevi
         physicalDevice.template getFeatures2<
             vk::PhysicalDeviceFeatures2,
             vk::PhysicalDeviceVulkan13Features,
-            vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT
+            vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT,
+            vk::PhysicalDeviceVulkan11Features // for shader module creation
         >()
     };
     bool const supportsRequiredFeatures {
         features.template get<vk::PhysicalDeviceVulkan13Features>().dynamicRendering &&
-        features.template get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>().extendedDynamicState
+        features.template get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>().extendedDynamicState &&
+        features.template get<vk::PhysicalDeviceVulkan11Features>().shaderDrawParameters // for shader module creation
     };
 
     return supportsVulkan1_3 && supportsGraphics && supportsAllRequiredExtensions && supportsRequiredFeatures;
@@ -306,11 +310,13 @@ void Application::createLogicalDevice() {
     vk::StructureChain<
         vk::PhysicalDeviceFeatures2,
         vk::PhysicalDeviceVulkan13Features,
-        vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT
+        vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT,
+        vk::PhysicalDeviceVulkan11Features
     > const featureChain {
         {},
         {.dynamicRendering = true},
-        {.extendedDynamicState = true}
+        {.extendedDynamicState = true},
+        {.shaderDrawParameters = true} // for shader module creation
     };
 
     std::vector<char const *> const requiredDeviceExtensions {
@@ -475,9 +481,11 @@ void Application::createImageViews() {
 
 void Application::createGraphicsPipeline() {
     std::vector<char> const shaderCode {readFile("shaders/slang.spv")};
+    std::cout << "Shader code size = " << shaderCode.size() << std::endl; // must be 1408
+
     // The shader module is only needed during the pipeline creation,
     // so we can keep it as a local variable for this method.
-    vk::ShaderModule const shaderModule = createShaderModule(shaderCode);
+    vk::ShaderModule shaderModule = createShaderModule(shaderCode);
 
     vk::PipelineShaderStageCreateInfo const vertShaderStageCreateInfo {
         .stage = vk::ShaderStageFlagBits::eVertex,
@@ -565,6 +573,35 @@ void Application::createGraphicsPipeline() {
     };
 
     pipelineLayout = vk::raii::PipelineLayout(device, pipelineLayoutCreateInfo);
+
+    vk::PipelineRenderingCreateInfo const pipelineRenderingCreateInfo {
+        .colorAttachmentCount = 1,
+        .pColorAttachmentFormats = &swapChainSurfaceFormat.format
+    };
+
+    vk::GraphicsPipelineCreateInfo const graphicsPipelineCreateInfo {
+        .pNext =                &pipelineRenderingCreateInfo,
+        .stageCount =           2,
+        .pStages =              shaderStageCreateInfos,
+        .pVertexInputState =    &vertexInputCreateInfo,
+        .pInputAssemblyState =  &inputAssemblyCreateInfo,
+        .pViewportState =       &pipelineViewportStateCreateInfo,
+        .pRasterizationState =  &pipelineRasterizationStateCreateInfo,
+        .pMultisampleState =    &pipelineMultisampleStateCreateInfo,
+        .pColorBlendState =     &pipelineColorBlendStateCreateInfo,
+        .pDynamicState =        &pipelineDynamicStateCreateInfo,
+        .layout =               pipelineLayout,
+        .renderPass =           nullptr, // because using dynamic rendering
+        .basePipelineHandle =   VK_NULL_HANDLE, // optional
+        .basePipelineIndex =    -1 // optional
+    };
+
+    try{
+        graphicsPipeline = vk::raii::Pipeline(device, nullptr, graphicsPipelineCreateInfo);
+    }
+    catch(std::exception const & e){
+        std::cerr << "\tError: " << e.what() << std::endl;
+    }
 }
 
 std::vector<char> Application::readFile(std::string const & filename) {
@@ -588,12 +625,12 @@ std::vector<char> Application::readFile(std::string const & filename) {
     return buffer;
 }
 
-[[nodiscard]] vk::raii::ShaderModule Application::createShaderModule(const std::vector<char> & code) const {
+[[nodiscard]] vk::raii::ShaderModule Application::createShaderModule(std::vector<char> const & code) const {
     vk::ShaderModuleCreateInfo const shaderModuleCreateInfo {
-        .codeSize = sizeof(char) * code.size(),
+        .codeSize = code.size() * sizeof(char),
         .pCode = reinterpret_cast<uint32_t const *>(code.data())
     };
 
-    vk::raii::ShaderModule shaderModule(device, shaderModuleCreateInfo);
+    vk::raii::ShaderModule shaderModule {device, shaderModuleCreateInfo};
     return shaderModule;
 }

@@ -58,6 +58,7 @@ private:
     std::vector<vk::raii::ImageView> swapChainImageViews;
 
     vk::raii::PipelineLayout pipelineLayout {nullptr};
+    vk::raii::Pipeline graphicsPipeline {nullptr};
 
     /////////////////////////////////////// METHODS //////////////////////////////////////////////////
 
@@ -99,5 +100,5 @@ private:
 
     static std::vector<char> readFile(std::string const & filename);
 
-    [[nodiscard]] vk::raii::ShaderModule createShaderModule(const std::vector<char> & code) const;
+    [[nodiscard]] vk::raii::ShaderModule createShaderModule(std::vector<char> const & code) const;
 };
