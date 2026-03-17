@@ -485,7 +485,7 @@ void Application::createGraphicsPipeline() {
 
     // The shader module is only needed during the pipeline creation,
     // so we can keep it as a local variable for this method.
-    vk::ShaderModule shaderModule = createShaderModule(shaderCode);
+    vk::raii::ShaderModule const shaderModule = createShaderModule(shaderCode);
 
     vk::PipelineShaderStageCreateInfo const vertShaderStageCreateInfo {
         .stage = vk::ShaderStageFlagBits::eVertex,
