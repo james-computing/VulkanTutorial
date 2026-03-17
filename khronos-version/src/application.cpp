@@ -481,7 +481,7 @@ void Application::createImageViews() {
 
 void Application::createGraphicsPipeline() {
     std::vector<char> const shaderCode {readFile("shaders/slang.spv")};
-    std::cout << "Shader code size = " << shaderCode.size() << std::endl; // must be 1408
+    std::cout << "Shader code size = " << shaderCode.size() << "bytes" << std::endl; // must be 1408
 
     // The shader module is only needed during the pipeline creation,
     // so we can keep it as a local variable for this method.
