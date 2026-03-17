@@ -614,23 +614,31 @@ std::vector<char> Application::readFile(std::string const & filename) {
     }
 
     // Create a buffer with the file size
-    std::streampos const fileEndPos {file.tellg()};
-    std::vector<char> buffer(fileEndPos);
+    size_t const fileSize {(size_t) file.tellg()};
+    std::vector<char> buffer(fileSize);
     // Go to beggining of the file
-    file.seekg(0, std::ios::beg);
+    file.seekg(0);
     // Read the whole file to the buffer
-    file.read(buffer.data(), static_cast<std::streamsize>(buffer.size()));
+    file.read(buffer.data(), fileSize);
     file.close();
 
     return buffer;
 }
 
 [[nodiscard]] vk::raii::ShaderModule Application::createShaderModule(std::vector<char> const & code) const {
+    // Size of type used for code, in bytes.
+    // If the type is char, then typeSizeInBytes = 1.
+    size_t constexpr typeSizeInBytes {sizeof(*code.data())};
+
+    // The code must be passed as a pointer of type uint32_t
+    uint32_t const * const codeReinterpreted = reinterpret_cast<uint32_t const *>(code.data());
+
     vk::ShaderModuleCreateInfo const shaderModuleCreateInfo {
-        .codeSize = code.size() * sizeof(char),
-        .pCode = reinterpret_cast<uint32_t const *>(code.data())
+        // code size is the size in bytes
+        .codeSize = code.size() * typeSizeInBytes,
+        .pCode = codeReinterpreted
     };
 
-    vk::raii::ShaderModule shaderModule {device, shaderModuleCreateInfo};
+    vk::raii::ShaderModule shaderModule {vk::raii::ShaderModule(device, shaderModuleCreateInfo)};
     return shaderModule;
 }
