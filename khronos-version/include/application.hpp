@@ -57,6 +57,8 @@ private:
     std::vector<vk::Image> swapChainImages;
     std::vector<vk::raii::ImageView> swapChainImageViews;
 
+    vk::raii::PipelineLayout pipelineLayout {nullptr};
+
     /////////////////////////////////////// METHODS //////////////////////////////////////////////////
 
     void initVulkan();
@@ -93,7 +95,7 @@ private:
 
     void createImageViews();
 
-    void createGraphicsPipeline() const;
+    void createGraphicsPipeline();
 
     static std::vector<char> readFile(std::string const & filename);
 

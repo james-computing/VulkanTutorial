@@ -473,7 +473,7 @@ void Application::createImageViews() {
     }
 }
 
-void Application::createGraphicsPipeline() const {
+void Application::createGraphicsPipeline() {
     std::vector<char> const shaderCode {readFile("shaders/slang.spv")};
     // The shader module is only needed during the pipeline creation,
     // so we can keep it as a local variable for this method.
@@ -492,6 +492,79 @@ void Application::createGraphicsPipeline() const {
     };
 
     vk::PipelineShaderStageCreateInfo const shaderStageCreateInfos[] {vertShaderStageCreateInfo, fragShaderStageCreateInfo};
+
+    std::vector<vk::DynamicState> const dynamicStates = {
+        vk::DynamicState::eViewport,
+        vk::DynamicState::eScissor
+    };
+
+    vk::PipelineDynamicStateCreateInfo const pipelineDynamicStateCreateInfo {
+        .dynamicStateCount = static_cast<uint32_t>(dynamicStates.size()),
+        .pDynamicStates = dynamicStates.data()
+    };
+
+    vk::PipelineVertexInputStateCreateInfo constexpr vertexInputCreateInfo;
+
+    vk::PipelineInputAssemblyStateCreateInfo constexpr inputAssemblyCreateInfo {
+        .topology = vk::PrimitiveTopology::eTriangleList // triangle from every 3 vertices, without reuse.
+    };
+
+    vk::Viewport const viewport {
+        .x = 0,
+        .y = 0,
+        .width = static_cast<float>(swapChainExtent.width),
+        .height = static_cast<float>(swapChainExtent.height),
+        .minDepth = 0,
+        .maxDepth = 1
+    };
+
+    vk::Rect2D const rect2D {
+        .offset = vk::Offset2D{0,0},
+        .extent = swapChainExtent
+    };
+
+    vk::PipelineViewportStateCreateInfo constexpr pipelineViewportStateCreateInfo {
+        .viewportCount = 1,
+        .scissorCount = 1
+    };
+
+    vk::PipelineRasterizationStateCreateInfo constexpr pipelineRasterizationStateCreateInfo {
+        .depthClampEnable = vk::False,
+        .rasterizerDiscardEnable = vk::False,
+        .polygonMode = vk::PolygonMode::eFill,
+        .cullMode = vk::CullModeFlagBits::eBack,
+        .frontFace = vk::FrontFace::eClockwise,
+        .depthBiasEnable = vk::False,
+        .depthBiasSlopeFactor = 1.0f,
+        .lineWidth = 1.0f
+    };
+
+    vk::PipelineMultisampleStateCreateInfo constexpr pipelineMultisampleStateCreateInfo {
+        .rasterizationSamples = vk::SampleCountFlagBits::e1,
+        .sampleShadingEnable = vk::False
+    };
+
+    vk::PipelineColorBlendAttachmentState constexpr pipelineColorBlendAttachmentState {
+        .blendEnable =      vk::False,
+        .colorWriteMask =   vk::ColorComponentFlagBits::eR |
+                            vk::ColorComponentFlagBits::eG |
+                            vk::ColorComponentFlagBits::eB |
+                            vk::ColorComponentFlagBits::eA
+    };
+
+    vk::PipelineColorBlendStateCreateInfo const pipelineColorBlendStateCreateInfo {
+        .logicOpEnable =    vk::False,
+        .logicOp =          vk::LogicOp::eCopy,
+        .attachmentCount =  1,
+        .pAttachments =     &pipelineColorBlendAttachmentState
+    };
+
+    vk::PipelineLayoutCreateInfo constexpr pipelineLayoutCreateInfo {
+        .setLayoutCount = 0,
+        .pushConstantRangeCount = 0
+    };
+
+    pipelineLayout = vk::raii::PipelineLayout(device, pipelineLayoutCreateInfo);
 }
 
 std::vector<char> Application::readFile(std::string const & filename) {
