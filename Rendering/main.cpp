@@ -1,4 +1,4 @@
-//#include <vulkan/vulkan.h>
+#include <vulkan/vulkan.h>
 #define GLFW_INCLUDE_VULKAN
 #define GLM_FORCE_RADIANS // for glm::rotate
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -136,7 +136,7 @@ struct UniformBufferObject
     glm::mat4 proj;
 };
 
-class HelloTriangleApplication
+class Application
 {
 private:
     // GLFWwindow
@@ -262,7 +262,7 @@ public:
 private:
     static void framebufferResizeCallback(GLFWwindow * window, int width, int height)
     {
-        HelloTriangleApplication * app = reinterpret_cast<HelloTriangleApplication *>(glfwGetWindowUserPointer(window));
+        Application * app = reinterpret_cast<Application *>(glfwGetWindowUserPointer(window));
         app->framebufferResized = true;
     }
 
@@ -2453,7 +2453,7 @@ private:
 
 int main()
 {
-    HelloTriangleApplication app;
+    Application app;
 
     try
     {
