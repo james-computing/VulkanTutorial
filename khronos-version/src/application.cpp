@@ -475,8 +475,23 @@ void Application::createImageViews() {
 
 void Application::createGraphicsPipeline() const {
     std::vector<char> const shaderCode {readFile("shaders/slang.spv")};
+    // The shader module is only needed during the pipeline creation,
+    // so we can keep it as a local variable for this method.
     vk::ShaderModule const shaderModule = createShaderModule(shaderCode);
 
+    vk::PipelineShaderStageCreateInfo const vertShaderStageCreateInfo {
+        .stage = vk::ShaderStageFlagBits::eVertex,
+        .module = shaderModule,
+        .pName = "vertMain"
+    };
+
+    vk::PipelineShaderStageCreateInfo const fragShaderStageCreateInfo {
+        .stage = vk::ShaderStageFlagBits::eFragment,
+        .module = shaderModule,
+        .pName = "fragMain"
+    };
+
+    vk::PipelineShaderStageCreateInfo const shaderStageCreateInfos[] {vertShaderStageCreateInfo, fragShaderStageCreateInfo};
 }
 
 std::vector<char> Application::readFile(std::string const & filename) {
