@@ -96,4 +96,6 @@ private:
     void createGraphicsPipeline() const;
 
     static std::vector<char> readFile(std::string const & filename);
+
+    [[nodiscard]] vk::raii::ShaderModule createShaderModule(const std::vector<char> & code) const;
 };

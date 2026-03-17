@@ -475,6 +475,8 @@ void Application::createImageViews() {
 
 void Application::createGraphicsPipeline() const {
     std::vector<char> const shaderCode {readFile("shaders/slang.spv")};
+    vk::ShaderModule const shaderModule = createShaderModule(shaderCode);
+
 }
 
 std::vector<char> Application::readFile(std::string const & filename) {
@@ -496,4 +498,14 @@ std::vector<char> Application::readFile(std::string const & filename) {
     file.close();
 
     return buffer;
+}
+
+[[nodiscard]] vk::raii::ShaderModule Application::createShaderModule(const std::vector<char> & code) const {
+    vk::ShaderModuleCreateInfo const shaderModuleCreateInfo {
+        .codeSize = sizeof(char) * code.size(),
+        .pCode = reinterpret_cast<uint32_t const *>(code.data())
+    };
+
+    vk::raii::ShaderModule shaderModule(device, shaderModuleCreateInfo);
+    return shaderModule;
 }
