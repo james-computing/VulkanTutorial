@@ -64,6 +64,10 @@ private:
     vk::raii::CommandPool commandPool {nullptr};
     vk::raii::CommandBuffer commandBuffer {nullptr};
 
+    vk::raii::Semaphore presentCompleteSemaphore {nullptr};
+    vk::raii::Semaphore renderFinishedSemaphore {nullptr};
+    vk::raii::Fence drawFence {nullptr};
+
     /////////////////////////////////////// METHODS //////////////////////////////////////////////////
 
     void initVulkan();
@@ -121,4 +125,8 @@ private:
     ) const;
 
     void recordCommandBuffer(uint32_t imageIndex);
+
+    void createSyncObjects();
+
+    void drawFrame();
 };

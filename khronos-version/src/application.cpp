@@ -18,11 +18,13 @@ void Application::initVulkan() {
     createGraphicsPipeline();
     createCommandPool();
     createCommandBuffer();
+    createSyncObjects();
 }
 
 void Application::mainLoop() {
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
+        drawFrame();
     }
 }
 
@@ -246,15 +248,17 @@ bool Application::isDeviceSuitable(vk::raii::PhysicalDevice const & physicalDevi
         // .template is to tell the compiler to use the method that comes from templates, avoiding ambiguity
         physicalDevice.template getFeatures2<
             vk::PhysicalDeviceFeatures2,
+            vk::PhysicalDeviceVulkan11Features, // for shader module creation
             vk::PhysicalDeviceVulkan13Features,
-            vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT,
-            vk::PhysicalDeviceVulkan11Features // for shader module creation
+            vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT
         >()
     };
     bool const supportsRequiredFeatures {
+        
+        features.template get<vk::PhysicalDeviceVulkan11Features>().shaderDrawParameters &&// for shader module creation
         features.template get<vk::PhysicalDeviceVulkan13Features>().dynamicRendering &&
-        features.template get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>().extendedDynamicState &&
-        features.template get<vk::PhysicalDeviceVulkan11Features>().shaderDrawParameters // for shader module creation
+        features.template get<vk::PhysicalDeviceVulkan13Features>().synchronization2 &&
+        features.template get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>().extendedDynamicState
     };
 
     return supportsVulkan1_3 && supportsGraphics && supportsAllRequiredExtensions && supportsRequiredFeatures;
@@ -316,7 +320,10 @@ void Application::createLogicalDevice() {
         vk::PhysicalDeviceVulkan11Features
     > const featureChain {
         {},
-        {.dynamicRendering = true},
+        {
+            .synchronization2 = true, // sync objects
+            .dynamicRendering = true
+        },
         {.extendedDynamicState = true},
         {.shaderDrawParameters = true} // for shader module creation
     };
@@ -770,4 +777,65 @@ void Application::recordCommandBuffer(uint32_t imageIndex) {
     );
 
     commandBuffer.end();
+}
+
+void Application::createSyncObjects() {
+    presentCompleteSemaphore = vk::raii::Semaphore(device, vk::SemaphoreCreateInfo());
+    renderFinishedSemaphore = vk::raii::Semaphore(device, vk::SemaphoreCreateInfo());
+
+    vk::FenceCreateInfo constexpr fenceCreateInfo {
+        .flags = vk::FenceCreateFlagBits::eSignaled
+    };
+    drawFence = vk::raii::Fence(device, fenceCreateInfo);
+}
+
+void Application::drawFrame() {
+    // Temporary solution, instead of using a fence here, use waitIdle
+    queue.waitIdle();
+
+    // Timeout is in nanoseconds. Use UINT64_MAX to effectivelly disable it.
+    vk::ResultValue<uint32_t> const resultValueAcquireNextImage {swapChain.acquireNextImage(UINT64_MAX, *presentCompleteSemaphore, {})};
+    if (!resultValueAcquireNextImage.has_value()) {
+        throw std::runtime_error("Failed to acquire next image");
+    }
+
+    uint32_t const imageIndex {resultValueAcquireNextImage.value};
+
+    recordCommandBuffer(imageIndex);
+
+    device.resetFences(*drawFence);
+
+    vk::PipelineStageFlags waitDestinationStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput);
+
+    vk::SubmitInfo const submitInfo {
+        .waitSemaphoreCount = 1,
+        .pWaitSemaphores = &*presentCompleteSemaphore,
+        .pWaitDstStageMask = &waitDestinationStageMask,
+        .commandBufferCount = 1,
+        .pCommandBuffers = &*commandBuffer,
+        .signalSemaphoreCount = 1,
+        .pSignalSemaphores = &*renderFinishedSemaphore
+    };
+
+    queue.submit(submitInfo, *drawFence);
+
+    // Timeout is in nanoseconds. Use UINT64_MAX to effectivelly disable it.
+    vk::Result const fenceResult {device.waitForFences(*drawFence, vk::True, UINT64_MAX)};
+    if (fenceResult != vk::Result::eSuccess) {
+        throw std::runtime_error("Failed to wait for fences");
+    }
+
+    vk::PresentInfoKHR const presentInfoKHR {
+        .waitSemaphoreCount = 1,
+        .pWaitSemaphores = &*renderFinishedSemaphore,
+        .swapchainCount = 1,
+        .pSwapchains = &*swapChain,
+        .pImageIndices = &imageIndex,
+        .pResults = nullptr // optional
+    };
+
+    vk::Result const resultPresent {queue.presentKHR(presentInfoKHR)};
+    if (resultPresent != vk::Result::eSuccess) {
+        throw std::runtime_error("Failed to present image");
+    }
 }
