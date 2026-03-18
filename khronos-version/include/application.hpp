@@ -119,4 +119,6 @@ private:
         vk::PipelineStageFlags2 srcStageMask,
         vk::PipelineStageFlags2 dstStageMask
     ) const;
+
+    void recordCommandBuffer(uint32_t imageIndex);
 };

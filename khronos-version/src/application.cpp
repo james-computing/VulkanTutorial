@@ -697,3 +697,77 @@ void Application::transitionImageLayout(
 
     commandBuffer.pipelineBarrier2(dependencyInfo);
 }
+
+void Application::recordCommandBuffer(uint32_t imageIndex) {
+    commandBuffer.begin({});
+
+    // Before start rendering, transition the swap chain image layout to COLOR_ATTACHMENT_OPTIMAL
+    transitionImageLayout(
+        imageIndex,
+        vk::ImageLayout::eUndefined,
+        vk::ImageLayout::eColorAttachmentOptimal,
+        vk::AccessFlagBits2::eNone, // don't wait on previous operations
+        vk::AccessFlagBits2::eColorAttachmentWrite,
+        vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+        vk::PipelineStageFlagBits2::eColorAttachmentOutput
+    );
+
+    vk::ClearValue constexpr clearColor {vk::ClearColorValue(0.0f, 0.0f, 0.0f, 1.0f)};
+
+    vk::RenderingAttachmentInfo const renderingAttachmentInfo {
+        .imageView = swapChainImageViews[imageIndex],
+        .imageLayout = vk::ImageLayout::eColorAttachmentOptimal,
+        .loadOp = vk::AttachmentLoadOp::eClear,
+        .storeOp = vk::AttachmentStoreOp::eStore,
+        .clearValue = clearColor
+    };
+
+    vk::RenderingInfo const renderingInfo {
+        .renderArea = vk::Rect2D {
+            .offset = {0, 0},
+            .extent = swapChainExtent
+        },
+        .layerCount = 1,
+        .colorAttachmentCount = 1,
+        .pColorAttachments = &renderingAttachmentInfo
+    };
+
+    commandBuffer.beginRendering(renderingInfo);
+
+    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline);
+
+    vk::Viewport const viewport {
+        .x = 0.0f,
+        .y = 0.0f,
+        .width = static_cast<float>(swapChainExtent.width),
+        .height = static_cast<float>(swapChainExtent.height),
+        .minDepth = 0.0f,
+        .maxDepth = 1.0f
+    };
+
+    commandBuffer.setViewport(0, viewport);
+
+    vk::Rect2D const scissor {
+        .offset = vk::Offset2D(0, 0),
+        .extent = swapChainExtent
+    };
+
+    commandBuffer.setScissor(0, scissor);
+
+    commandBuffer.draw(3, 1, 0, 0);
+
+    commandBuffer.endRendering();
+
+    // After rendering, transition the swapchain image to PRESENT_SRC
+    transitionImageLayout(
+        imageIndex,
+        vk::ImageLayout::eColorAttachmentOptimal,
+        vk::ImageLayout::ePresentSrcKHR,
+        vk::AccessFlagBits2::eColorAttachmentWrite,
+        vk::AccessFlagBits2::eNone,
+        vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+        vk::PipelineStageFlagBits2::eBottomOfPipe
+    );
+
+    commandBuffer.end();
+}
