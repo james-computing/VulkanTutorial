@@ -17,7 +17,7 @@ void Application::initVulkan() {
     createImageViews();
     createGraphicsPipeline();
     createCommandPool();
-    createCommandBuffer();
+    createCommandBuffers();
     createSyncObjects();
 }
 
@@ -657,14 +657,15 @@ void Application::createCommandPool() {
     commandPool = vk::raii::CommandPool(device, commandPoolCreateInfo);
 }
 
-void Application::createCommandBuffer() {
+void Application::createCommandBuffers() {
     vk::CommandBufferAllocateInfo const commandBufferAllocateInfo {
         .commandPool = commandPool,
         .level = vk::CommandBufferLevel::ePrimary,
-        .commandBufferCount = 1
+        .commandBufferCount = MAX_FRAMES_IN_FLIGHT
     };
 
-    commandBuffer = std::move(vk::raii::CommandBuffers(device, commandBufferAllocateInfo).front());
+    // vk::raii::CommandBuffers inherits from std::vector<vk::raii:CommandBuffer>
+    commandBuffers = vk::raii::CommandBuffers(device, commandBufferAllocateInfo);
 }
 
 void Application::transitionImageLayout(
@@ -702,10 +703,12 @@ void Application::transitionImageLayout(
         .pImageMemoryBarriers = &barrier
     };
 
-    commandBuffer.pipelineBarrier2(dependencyInfo);
+    commandBuffers[frameIndex].pipelineBarrier2(dependencyInfo);
 }
 
 void Application::recordCommandBuffer(uint32_t imageIndex) {
+    vk::raii::CommandBuffer const & commandBuffer {commandBuffers[frameIndex]};
+
     commandBuffer.begin({});
 
     // Before start rendering, transition the swap chain image layout to COLOR_ATTACHMENT_OPTIMAL
@@ -780,33 +783,46 @@ void Application::recordCommandBuffer(uint32_t imageIndex) {
 }
 
 void Application::createSyncObjects() {
-    presentCompleteSemaphore = vk::raii::Semaphore(device, vk::SemaphoreCreateInfo());
-    renderFinishedSemaphore = vk::raii::Semaphore(device, vk::SemaphoreCreateInfo());
+    assert(presentCompleteSemaphores.empty() && renderFinishedSemaphores.empty() && inFlightFences.empty());
 
     vk::FenceCreateInfo constexpr fenceCreateInfo {
         .flags = vk::FenceCreateFlagBits::eSignaled
     };
-    drawFence = vk::raii::Fence(device, fenceCreateInfo);
+
+    size_t const numberOfImages {swapChainImages.size()};
+    for (size_t i {0}; i < numberOfImages; ++i) {
+        renderFinishedSemaphores.emplace_back(vk::raii::Semaphore(device, vk::SemaphoreCreateInfo()));
+    }
+
+    for (size_t i {0}; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+        presentCompleteSemaphores.emplace_back(vk::raii::Semaphore(device, vk::SemaphoreCreateInfo()));
+        inFlightFences.emplace_back(vk::raii::Fence(device, fenceCreateInfo));
+    }
 }
 
 void Application::drawFrame() {
-    // Temporary solution, instead of using a fence here, use waitIdle
-    queue.waitIdle();
+    vk::raii::CommandBuffer & commandBuffer {commandBuffers[frameIndex]};
+    vk::raii::Semaphore & presentCompleteSemaphore {presentCompleteSemaphores[frameIndex]};
+    vk::raii::Fence & drawFence {inFlightFences[frameIndex]};
+
+    // Timeout is in nanoseconds. Use UINT64_MAX to effectivelly disable it.
+    vk::Result const fenceResult {device.waitForFences(*drawFence, vk::True, UINT64_MAX)};
+    if (fenceResult != vk::Result::eSuccess) {
+        throw std::runtime_error("Failed to wait for fence");
+    }
 
     // Timeout is in nanoseconds. Use UINT64_MAX to effectivelly disable it.
     vk::ResultValue<uint32_t> const resultValueAcquireNextImage {swapChain.acquireNextImage(UINT64_MAX, *presentCompleteSemaphore, {})};
     if (!resultValueAcquireNextImage.has_value()) {
         throw std::runtime_error("Failed to acquire next image");
     }
-
     uint32_t const imageIndex {resultValueAcquireNextImage.value};
 
+    commandBuffer.reset();
     recordCommandBuffer(imageIndex);
 
-    device.resetFences(*drawFence);
-
+    vk::raii::Semaphore const & renderFinishedSemaphore {renderFinishedSemaphores[imageIndex]}; // imageIndex, not frameIndex
     vk::PipelineStageFlags waitDestinationStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput);
-
     vk::SubmitInfo const submitInfo {
         .waitSemaphoreCount = 1,
         .pWaitSemaphores = &*presentCompleteSemaphore,
@@ -817,13 +833,8 @@ void Application::drawFrame() {
         .pSignalSemaphores = &*renderFinishedSemaphore
     };
 
-    queue.submit(submitInfo, *drawFence);
-
-    // Timeout is in nanoseconds. Use UINT64_MAX to effectivelly disable it.
-    vk::Result const fenceResult {device.waitForFences(*drawFence, vk::True, UINT64_MAX)};
-    if (fenceResult != vk::Result::eSuccess) {
-        throw std::runtime_error("Failed to wait for fences");
-    }
+    device.resetFences(*drawFence);
+    queue.submit(submitInfo, drawFence);
 
     vk::PresentInfoKHR const presentInfoKHR {
         .waitSemaphoreCount = 1,
@@ -837,5 +848,10 @@ void Application::drawFrame() {
     vk::Result const resultPresent {queue.presentKHR(presentInfoKHR)};
     if (resultPresent != vk::Result::eSuccess) {
         throw std::runtime_error("Failed to present image");
+    }
+
+    ++frameIndex;
+    if (frameIndex == MAX_FRAMES_IN_FLIGHT) {
+        frameIndex = 0;
     }
 }

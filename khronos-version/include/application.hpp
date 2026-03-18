@@ -62,11 +62,14 @@ private:
     vk::raii::Pipeline graphicsPipeline {nullptr};
 
     vk::raii::CommandPool commandPool {nullptr};
-    vk::raii::CommandBuffer commandBuffer {nullptr};
+    std::vector<vk::raii::CommandBuffer> commandBuffers;
 
-    vk::raii::Semaphore presentCompleteSemaphore {nullptr};
-    vk::raii::Semaphore renderFinishedSemaphore {nullptr};
-    vk::raii::Fence drawFence {nullptr};
+    std::vector<vk::raii::Semaphore> presentCompleteSemaphores;
+    std::vector<vk::raii::Semaphore> renderFinishedSemaphores;
+    std::vector<vk::raii::Fence> inFlightFences;
+
+    uint32_t const MAX_FRAMES_IN_FLIGHT {2};
+    uint32_t frameIndex {0};
 
     /////////////////////////////////////// METHODS //////////////////////////////////////////////////
 
@@ -112,7 +115,7 @@ private:
 
     void createCommandPool();
 
-    void createCommandBuffer();
+    void createCommandBuffers();
 
     void transitionImageLayout(
         uint32_t imageIndex,
