@@ -62,6 +62,7 @@ private:
     vk::raii::Pipeline graphicsPipeline {nullptr};
 
     vk::raii::CommandPool commandPool {nullptr};
+    vk::raii::CommandBuffer commandBuffer {nullptr};
 
     /////////////////////////////////////// METHODS //////////////////////////////////////////////////
 
@@ -106,4 +107,6 @@ private:
     [[nodiscard]] vk::raii::ShaderModule createShaderModule(std::vector<char> const & code) const;
 
     void createCommandPool();
+
+    void createCommandBuffer();
 };

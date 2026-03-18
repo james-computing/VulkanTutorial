@@ -17,6 +17,7 @@ void Application::initVulkan() {
     createImageViews();
     createGraphicsPipeline();
     createCommandPool();
+    createCommandBuffer();
 }
 
 void Application::mainLoop() {
@@ -647,4 +648,14 @@ void Application::createCommandPool() {
     };
 
     commandPool = vk::raii::CommandPool(device, commandPoolCreateInfo);
+}
+
+void Application::createCommandBuffer() {
+    vk::CommandBufferAllocateInfo const commandBufferAllocateInfo {
+        .commandPool = commandPool,
+        .level = vk::CommandBufferLevel::ePrimary,
+        .commandBufferCount = 1
+    };
+
+    commandBuffer = std::move(vk::raii::CommandBuffers(device, commandBufferAllocateInfo).front());
 }
