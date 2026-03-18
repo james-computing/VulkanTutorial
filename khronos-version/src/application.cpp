@@ -16,6 +16,7 @@ void Application::initVulkan() {
     createSwapChain();
     createImageViews();
     createGraphicsPipeline();
+    createCommandPool();
 }
 
 void Application::mainLoop() {
@@ -277,7 +278,7 @@ void Application::createLogicalDevice() {
     // Find first queue with graphics support which is also capable of presenting to the window,
     // and store its index.
     bool foundSuitableQueue {false};
-    uint32_t queueIndex {0};
+    queueIndex = 0;
     size_t const queueFamilyPropertiesSize {queueFamilyProperties.size()};
     for (; queueIndex < queueFamilyPropertiesSize; ++queueIndex) {
         bool supportsGraphics = (queueFamilyProperties[queueIndex].queueFlags & vk::QueueFlagBits::eGraphics) != static_cast<vk::QueueFlags>(0);
@@ -637,4 +638,13 @@ std::vector<char> Application::readFile(std::string const & filename) {
 
     vk::raii::ShaderModule shaderModule {vk::raii::ShaderModule(device, shaderModuleCreateInfo)};
     return shaderModule;
+}
+
+void Application::createCommandPool() {
+    vk::CommandPoolCreateInfo const commandPoolCreateInfo {
+        .flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
+        .queueFamilyIndex = queueIndex
+    };
+
+    commandPool = vk::raii::CommandPool(device, commandPoolCreateInfo);
 }

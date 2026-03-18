@@ -47,6 +47,7 @@ private:
 
     vk::raii::Device device {nullptr}; // logical device
 
+    uint32_t queueIndex;
     vk::raii::Queue queue {nullptr};
 
     vk::raii::SurfaceKHR surface {nullptr};
@@ -59,6 +60,8 @@ private:
 
     vk::raii::PipelineLayout pipelineLayout {nullptr};
     vk::raii::Pipeline graphicsPipeline {nullptr};
+
+    vk::raii::CommandPool commandPool {nullptr};
 
     /////////////////////////////////////// METHODS //////////////////////////////////////////////////
 
@@ -101,4 +104,6 @@ private:
     static std::vector<char> readFile(std::string const & filename);
 
     [[nodiscard]] vk::raii::ShaderModule createShaderModule(std::vector<char> const & code) const;
+
+    void createCommandPool();
 };
