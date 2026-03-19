@@ -17,6 +17,7 @@ void Application::initVulkan() {
     createImageViews();
     createGraphicsPipeline();
     createCommandPool();
+    createVertexBuffer();
     createCommandBuffers();
     createSyncObjects();
 }
@@ -909,4 +910,14 @@ void Application::recreateSwapChain() {
 void Application::frameBufferResizeCallback(GLFWwindow * window, int width, int height) {
     Application * const app {reinterpret_cast<Application *>(glfwGetWindowUserPointer(window))};
     app->frameBufferResized = true;
+}
+
+void Application::createVertexBuffer() {
+    vk::BufferCreateInfo const vertexBufferCreateInfo {
+        .size = sizeof(Vertex) * vertices.size(),
+        .usage = vk::BufferUsageFlagBits::eVertexBuffer,
+        .sharingMode = vk::SharingMode::eExclusive
+    };
+
+    vertexBuffer = vk::raii::Buffer(device, vertexBufferCreateInfo);
 }

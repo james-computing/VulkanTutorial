@@ -81,6 +81,8 @@ private:
         {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
     };
 
+    vk::raii::Buffer vertexBuffer {nullptr};
+
     /////////////////////////////////////// METHODS //////////////////////////////////////////////////
 
     void initVulkan();
@@ -147,4 +149,6 @@ private:
     void recreateSwapChain();
 
     static void frameBufferResizeCallback(GLFWwindow * window, int width, int height);
+
+    void createVertexBuffer();
 };
