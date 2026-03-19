@@ -15,6 +15,28 @@ struct Vertex {
     glm::vec2 pos;
     glm::vec3 color;
 
-    static vk::VertexInputBindingDescription constexpr getBindingDescription();
-    static std::array<vk::VertexInputAttributeDescription, 2> constexpr getAttributeDescriptions();
+    static vk::VertexInputBindingDescription constexpr getBindingDescription() {
+        return vk::VertexInputBindingDescription {
+            .binding = 0,
+            .stride = sizeof(Vertex),
+            .inputRate = vk::VertexInputRate::eVertex
+        };
+    }
+
+    static std::array<vk::VertexInputAttributeDescription, 2> constexpr getAttributeDescriptions() {
+        return {
+            vk::VertexInputAttributeDescription {
+                .location = 0,
+                .binding = 0,
+                .format = vk::Format::eR32G32Sfloat, // float2
+                .offset = offsetof(Vertex, pos),
+            },
+            vk::VertexInputAttributeDescription {
+                .location = 1,
+                .binding = 0,
+                .format = vk::Format::eR32G32B32Sfloat, // float3
+                .offset = offsetof(Vertex, color),
+            }
+        };
+    }
 };
