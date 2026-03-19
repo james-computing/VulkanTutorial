@@ -881,6 +881,18 @@ void Application::cleanupSwapChain() {
 }
 
 void Application::recreateSwapChain() {
+    // Handle window minimization by waiting for width and height to be non zero
+    int width;
+    int height;
+    glfwGetFramebufferSize(window, &width, &height);
+    while (width == 0 || height == 0) {
+        glfwGetFramebufferSize(window, &width, &height);
+        glfwWaitEvents();
+    }
+
+    // Now the window should not be minimized, with width and height non zero.
+    // Proceed with swap chain recreation.
+
     cleanupSwapChain();
     createSwapChain();
     createImageViews();
