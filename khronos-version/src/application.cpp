@@ -45,6 +45,9 @@ void Application::initWindow() {
     // The 4th parameter is to specify a monitor,
     // The 5th is for OpenGL.
     window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
+
+    glfwSetWindowUserPointer(window, this);
+    glfwSetFramebufferSizeCallback(window, frameBufferResizeCallback);
 }
 
 std::vector<char const *> Application::getRequiredGLFWExtensions() const {
@@ -817,17 +820,16 @@ void Application::drawFrame() {
     vk::ResultValue<uint32_t> const resultValueAcquireNextImage {swapChain.acquireNextImage(UINT64_MAX, *presentCompleteSemaphore, {})};
     switch (resultValueAcquireNextImage.result) {
         case vk::Result::eErrorOutOfDateKHR:
+        case vk::Result::eSuboptimalKHR: // resultValueAcquireNextImage.has_value() is giving false in this case, so must treat as error
             recreateSwapChain();
             return;
-        case vk::Result::eSuboptimalKHR:
-            break;
         case vk::Result::eSuccess:
             break;
         default:
             throw std::runtime_error("Failed to acquire next image");
     }
     if (!resultValueAcquireNextImage.has_value()) {
-        throw std::runtime_error("Failed to acquire next image");
+        throw std::runtime_error("resultValueAcquireNextImage.has_value() = false");
     }
     uint32_t const imageIndex {resultValueAcquireNextImage.value};
 
@@ -859,15 +861,11 @@ void Application::drawFrame() {
     };
 
     vk::Result const resultPresent {queue.presentKHR(presentInfoKHR)};
-    switch (resultPresent) {
-        case vk::Result::eSuccess:
-            break;
-        case vk::Result::eSuboptimalKHR:
-        case vk::Result::eErrorOutOfDateKHR:
-            recreateSwapChain();
-            return;
-        default:
-            throw std::runtime_error("Failed to present image");
+    if (resultPresent == vk::Result::eSuboptimalKHR || resultPresent == vk::Result::eErrorOutOfDateKHR || frameBufferResized) {
+        recreateSwapChain();
+        return;
+    } else if (resultPresent != vk::Result::eSuccess) {
+        throw std::runtime_error("Failed to present image");
     }
 
     ++frameIndex;
@@ -886,4 +884,9 @@ void Application::recreateSwapChain() {
     cleanupSwapChain();
     createSwapChain();
     createImageViews();
+}
+
+void Application::frameBufferResizeCallback(GLFWwindow * window, int width, int height) {
+    Application * const app {reinterpret_cast<Application *>(glfwGetWindowUserPointer(window))};
+    app->frameBufferResized = true;
 }

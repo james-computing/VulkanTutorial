@@ -72,6 +72,8 @@ private:
     uint32_t const MAX_FRAMES_IN_FLIGHT {2};
     uint32_t frameIndex {0};
 
+    bool frameBufferResized {false};
+
     /////////////////////////////////////// METHODS //////////////////////////////////////////////////
 
     void initVulkan();
@@ -136,4 +138,6 @@ private:
 
     void cleanupSwapChain();
     void recreateSwapChain();
+
+    static void frameBufferResizeCallback(GLFWwindow * window, int width, int height);
 };
