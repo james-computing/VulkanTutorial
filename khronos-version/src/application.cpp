@@ -525,7 +525,15 @@ void Application::createGraphicsPipeline() {
         .pDynamicStates = dynamicStates.data()
     };
 
-    vk::PipelineVertexInputStateCreateInfo constexpr vertexInputCreateInfo;
+
+    vk::VertexInputBindingDescription const bindingDescription {Vertex::getBindingDescription()};
+    std::array<vk::VertexInputAttributeDescription, 2> const attributeDescriptions {Vertex::getAttributeDescriptions()};
+    vk::PipelineVertexInputStateCreateInfo const vertexInputCreateInfo {
+        .vertexBindingDescriptionCount = 1,
+        .pVertexBindingDescriptions = &bindingDescription,
+        .vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size()),
+        .pVertexAttributeDescriptions = attributeDescriptions.data()
+    };
 
     vk::PipelineInputAssemblyStateCreateInfo constexpr inputAssemblyCreateInfo {
         .topology = vk::PrimitiveTopology::eTriangleList // triangle from every 3 vertices, without reuse.
