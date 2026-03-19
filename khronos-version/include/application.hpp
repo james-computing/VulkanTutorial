@@ -18,12 +18,7 @@ import vulkan_hpp;
 #include <limits> // for std::numeric_limits
 #include <algorithm> // for std::clamp
 #include <fstream> // read shader file
-#include <glm/glm.hpp> // for vectors and matrices for computer graphics
-
-struct Vertex {
-    glm::vec2 pos;
-    glm::vec3 color;
-};
+#include "../include/vertex.hpp"
 
 class Application {
 public:
