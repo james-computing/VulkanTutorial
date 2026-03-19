@@ -1,6 +1,6 @@
 #include "../include/vertex.hpp"
 
-vk::VertexInputBindingDescription Vertex::getBindingDescription() {
+vk::VertexInputBindingDescription constexpr Vertex::getBindingDescription() {
     return vk::VertexInputBindingDescription {
         .binding = 0,
         .stride = sizeof(Vertex),
@@ -8,17 +8,17 @@ vk::VertexInputBindingDescription Vertex::getBindingDescription() {
     };
 }
 
-std::array<vk::VertexInputAttributeDescription, 2> Vertex::getAttributeDescriptions() {
+std::array<vk::VertexInputAttributeDescription, 2> constexpr Vertex::getAttributeDescriptions() {
     return {
         vk::VertexInputAttributeDescription {
-            .binding = 0,
             .location = 0,
+            .binding = 0,
             .format = vk::Format::eR32G32Sfloat, // float2
             .offset = offsetof(Vertex, pos),
         },
         vk::VertexInputAttributeDescription {
-            .binding = 1,
-            .location = 0,
+            .location = 1,
+            .binding = 0,
             .format = vk::Format::eR32G32B32Sfloat, // float3
             .offset = offsetof(Vertex, color),
         }
