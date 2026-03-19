@@ -1,12 +1,5 @@
 #pragma once
 
-#include <iostream>
-#include <stdexcept>
-#include <cstdlib> // For uint32_t
-#include <limits> // for std::numeric_limits
-#include <algorithm> // for std::clamp
-#include <fstream> // read shader file
-
 #define VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
 //#define VULKAN_HPP_NO_EXCEPTIONS
 #define VULKAN_HPP_HANDLE_ERROR_OUT_OF_DATE_AS_SUCCESS
@@ -18,6 +11,19 @@ import vulkan_hpp;
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
+
+#include <iostream>
+#include <stdexcept>
+#include <cstdlib> // For uint32_t
+#include <limits> // for std::numeric_limits
+#include <algorithm> // for std::clamp
+#include <fstream> // read shader file
+#include <glm/glm.hpp> // for vectors and matrices for computer graphics
+
+struct Vertex {
+    glm::vec2 pos;
+    glm::vec3 color;
+};
 
 class Application {
 public:
@@ -73,6 +79,12 @@ private:
     uint32_t frameIndex {0};
 
     bool frameBufferResized {false};
+
+    std::vector<Vertex> const vertices {
+        {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+        {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+        {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+    };
 
     /////////////////////////////////////// METHODS //////////////////////////////////////////////////
 
