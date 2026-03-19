@@ -29,6 +29,8 @@ void Application::mainLoop() {
 }
 
 void Application::cleanup() {
+    cleanupSwapChain();
+
     glfwDestroyWindow(window);
     glfwTerminate();
 }
@@ -37,7 +39,7 @@ void Application::initWindow() {
     glfwInit();
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API); // don't create an OpenGL context, since we're using Vulkan
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE); // don't allow resizing the window for the moment
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
     // Create a window.
     // The 4th parameter is to specify a monitor,
@@ -813,6 +815,17 @@ void Application::drawFrame() {
 
     // Timeout is in nanoseconds. Use UINT64_MAX to effectivelly disable it.
     vk::ResultValue<uint32_t> const resultValueAcquireNextImage {swapChain.acquireNextImage(UINT64_MAX, *presentCompleteSemaphore, {})};
+    switch (resultValueAcquireNextImage.result) {
+        case vk::Result::eErrorOutOfDateKHR:
+            recreateSwapChain();
+            return;
+        case vk::Result::eSuboptimalKHR:
+            break;
+        case vk::Result::eSuccess:
+            break;
+        default:
+            throw std::runtime_error("Failed to acquire next image");
+    }
     if (!resultValueAcquireNextImage.has_value()) {
         throw std::runtime_error("Failed to acquire next image");
     }
@@ -846,12 +859,31 @@ void Application::drawFrame() {
     };
 
     vk::Result const resultPresent {queue.presentKHR(presentInfoKHR)};
-    if (resultPresent != vk::Result::eSuccess) {
-        throw std::runtime_error("Failed to present image");
+    switch (resultPresent) {
+        case vk::Result::eSuccess:
+            break;
+        case vk::Result::eSuboptimalKHR:
+        case vk::Result::eErrorOutOfDateKHR:
+            recreateSwapChain();
+            return;
+        default:
+            throw std::runtime_error("Failed to present image");
     }
 
     ++frameIndex;
     if (frameIndex == MAX_FRAMES_IN_FLIGHT) {
         frameIndex = 0;
     }
+}
+
+void Application::cleanupSwapChain() {
+    device.waitIdle();
+    swapChainImageViews.clear();
+    swapChain = nullptr;
+}
+
+void Application::recreateSwapChain() {
+    cleanupSwapChain();
+    createSwapChain();
+    createImageViews();
 }
