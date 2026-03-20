@@ -924,6 +924,8 @@ void Application::createVertexBuffer() {
     vk::MemoryPropertyFlags constexpr stagingBufferMemoryProperties {
         vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
     };
+    vk::raii::Buffer stagingBuffer {nullptr};
+    vk::raii::DeviceMemory stagingBufferMemory {nullptr};
     createBuffer(
         bufferSize,
         stagingBufferUsage,

@@ -88,8 +88,6 @@ private:
 
     vk::raii::Buffer vertexBuffer {nullptr};
     vk::raii::DeviceMemory vertexBufferMemory {nullptr};
-    vk::raii::Buffer stagingBuffer {nullptr};
-    vk::raii::DeviceMemory stagingBufferMemory {nullptr};
 
     /////////////////////////////////////// METHODS //////////////////////////////////////////////////
 
