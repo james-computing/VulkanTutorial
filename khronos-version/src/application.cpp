@@ -916,21 +916,40 @@ void Application::frameBufferResizeCallback(GLFWwindow * window, int width, int 
 }
 
 void Application::createVertexBuffer() {
+    // Size of both staging and vertex buffers
     vk::DeviceSize const bufferSize {vertices.size() * sizeof(Vertex)};
-    vk::BufferUsageFlags constexpr bufferUsage {vk::BufferUsageFlagBits::eVertexBuffer};
-    vk::MemoryPropertyFlags constexpr memoryProperties {vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent};
+
+    // Create a staging buffer to transfer data from the host to the device
+    vk::BufferUsageFlags constexpr stagingBufferUsage {vk::BufferUsageFlagBits::eTransferSrc};
+    vk::MemoryPropertyFlags constexpr stagingBufferMemoryProperties {
+        vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
+    };
     createBuffer(
         bufferSize,
-        bufferUsage,
-        memoryProperties,
+        stagingBufferUsage,
+        stagingBufferMemoryProperties,
+        stagingBuffer,
+        stagingBufferMemory
+    );
+
+    // Copy the data from the vertices vector to the staging buffer memory
+    void *data {stagingBufferMemory.mapMemory(0, bufferSize)};
+    memcpy(data, vertices.data(), bufferSize);
+    stagingBufferMemory.unmapMemory();
+
+    // Create the vertex buffer
+    vk::BufferUsageFlags constexpr vertexbufferUsage {vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst};
+    vk::MemoryPropertyFlags constexpr vertexBufferMemoryProperties {vk::MemoryPropertyFlagBits::eDeviceLocal};
+    createBuffer(
+        bufferSize,
+        vertexbufferUsage,
+        vertexBufferMemoryProperties,
         vertexBuffer,
         vertexBufferMemory
     );
 
-    // Copy the data from the vertices vector to the vertex buffer memory
-    void *data {vertexBufferMemory.mapMemory(0, bufferSize)};
-    memcpy(data, vertices.data(), bufferSize);
-    vertexBufferMemory.unmapMemory();
+    // Copy data from staging buffer to vertex buffer
+    copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
 }
 
 uint32_t Application::findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties) {
@@ -980,4 +999,36 @@ void Application::createBuffer(
 
     vk::DeviceSize constexpr memoryOffset {0};
     buffer.bindMemory(*bufferMemory, memoryOffset);
+}
+
+void Application::copyBuffer(vk::raii::Buffer & srcBuffer, vk::raii::Buffer & dstBuffer, vk::DeviceSize bufferSize) const {
+    vk::CommandBufferAllocateInfo const commandBufferAllocateInfo {
+        .commandPool = commandPool,
+        .level = vk::CommandBufferLevel::ePrimary,
+        .commandBufferCount = 1
+    };
+
+    vk::raii::CommandBuffer const commandCopyBuffer {std::move(device.allocateCommandBuffers(commandBufferAllocateInfo).front())};
+
+    vk::CommandBufferBeginInfo constexpr commandBufferBeginInfo {
+        .flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit
+    };
+    commandCopyBuffer.begin(commandBufferBeginInfo);
+
+    vk::BufferCopy const region {
+        .srcOffset = 0,
+        .dstOffset = 0,
+        .size = bufferSize
+    };
+
+    commandCopyBuffer.copyBuffer(*srcBuffer, *dstBuffer, region);
+
+    commandCopyBuffer.end();
+
+    vk::SubmitInfo const submitInfo {
+        .commandBufferCount = 1,
+        .pCommandBuffers = &*commandCopyBuffer
+    };
+    queue.submit(submitInfo, {});
+    queue.waitIdle();
 }

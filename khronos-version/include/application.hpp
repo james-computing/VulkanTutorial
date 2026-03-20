@@ -83,6 +83,8 @@ private:
 
     vk::raii::Buffer vertexBuffer {nullptr};
     vk::raii::DeviceMemory vertexBufferMemory {nullptr};
+    vk::raii::Buffer stagingBuffer {nullptr};
+    vk::raii::DeviceMemory stagingBufferMemory {nullptr};
 
     /////////////////////////////////////// METHODS //////////////////////////////////////////////////
 
@@ -162,4 +164,6 @@ private:
         vk::raii::Buffer & buffer,
         vk::raii::DeviceMemory & bufferMemory
     );
+
+    void copyBuffer(vk::raii::Buffer & srcBuffer, vk::raii::Buffer & dstBuffer, vk::DeviceSize bufferSize) const;
 };
