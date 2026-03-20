@@ -496,7 +496,7 @@ void Application::createImageViews() {
 
 void Application::createGraphicsPipeline() {
     std::vector<char> const shaderCode {readFile("shaders/slang.spv")};
-    std::cout << "Shader code size = " << shaderCode.size() << " bytes" << std::endl; // must be 1408
+    std::cout << "Shader code size = " << shaderCode.size() << " bytes" << std::endl;
 
     // The shader module is only needed during the pipeline creation,
     // so we can keep it as a local variable for this method.
@@ -758,7 +758,10 @@ void Application::recordCommandBuffer(uint32_t imageIndex) {
 
     commandBuffer.beginRendering(renderingInfo);
 
-    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline);
+    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *graphicsPipeline);
+
+    commandBuffer.bindVertexBuffers(0, *vertexBuffer, {0});
+
 
     vk::Viewport const viewport {
         .x = 0.0f,
