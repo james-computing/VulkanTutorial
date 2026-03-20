@@ -916,33 +916,6 @@ void Application::frameBufferResizeCallback(GLFWwindow * window, int width, int 
 }
 
 void Application::createVertexBuffer() {
-    /*
-    vk::BufferCreateInfo const vertexBufferCreateInfo {
-        .size = sizeof(Vertex) * vertices.size(),
-        .usage = vk::BufferUsageFlagBits::eVertexBuffer,
-        .sharingMode = vk::SharingMode::eExclusive
-    };
-
-    vertexBuffer = vk::raii::Buffer(device, vertexBufferCreateInfo);
-
-    vk::MemoryRequirements const memoryRequirements {vertexBuffer.getMemoryRequirements()};
-
-    uint32_t const memoryTypeIndex {
-        findMemoryType(
-            memoryRequirements.memoryTypeBits,
-            vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
-        )
-    };
-    vk::MemoryAllocateInfo const memoryAllocateInfo {
-        .allocationSize = memoryRequirements.size,
-        .memoryTypeIndex = memoryTypeIndex
-    };
-
-    vertexBufferMemory = vk::raii::DeviceMemory(device, memoryAllocateInfo);
-
-    vk::DeviceSize constexpr memoryOffset {0};
-    vertexBuffer.bindMemory(*vertexBufferMemory, memoryOffset);
-    */
     vk::DeviceSize const bufferSize {vertices.size() * sizeof(Vertex)};
     vk::BufferUsageFlags constexpr bufferUsage {vk::BufferUsageFlagBits::eVertexBuffer};
     vk::MemoryPropertyFlags constexpr memoryProperties {vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent};
