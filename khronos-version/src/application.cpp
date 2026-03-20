@@ -938,6 +938,11 @@ void Application::createVertexBuffer() {
 
     vk::DeviceSize constexpr memoryOffset {0};
     vertexBuffer.bindMemory(*vertexBufferMemory, memoryOffset);
+
+    // Copy the data from the vertices vector to the vertex buffer memory
+    void *data {vertexBufferMemory.mapMemory(0, vertexBufferCreateInfo.size)};
+    memcpy(data, vertices.data(), vertexBufferCreateInfo.size);
+    vertexBufferMemory.unmapMemory();
 }
 
 uint32_t Application::findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties) {
