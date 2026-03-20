@@ -20,6 +20,7 @@ void Application::initVulkan() {
     createCommandPool();
     createVertexBuffer();
     createIndexBuffer();
+    createUniformBuffers();
     createCommandBuffers();
     createSyncObjects();
 }
@@ -1093,4 +1094,29 @@ void Application::createDescriptorSetLayout() {
     };
 
     descriptorSetLayout = vk::raii::DescriptorSetLayout(device, descriptorSetLayoutCreateInfo);
+}
+
+void Application::createUniformBuffers() {
+    for (size_t i {0}; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+        // Create uniform buffer, allocate memory for it and bind it
+        vk::DeviceSize constexpr bufferSize {sizeof(UniformBufferObject)};
+        vk::BufferUsageFlags constexpr bufferUsage {vk::BufferUsageFlagBits::eUniformBuffer};
+        vk::MemoryPropertyFlags constexpr memoryProperties {
+            vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
+        };
+        vk::raii::Buffer buffer {nullptr};
+        vk::raii::DeviceMemory bufferMemory {nullptr};
+        createBuffer(
+            bufferSize,
+            bufferUsage,
+            memoryProperties,
+            buffer,
+            bufferMemory
+        );
+        uniformBuffers.emplace_back(std::move(buffer));
+        uniformBuffersMemories.emplace_back(std::move(bufferMemory));
+        
+        // Map uniform buffer to a pointer, so we can transfer data from the pointer to the uniform buffer
+        uniformBuffersMapped.emplace_back(uniformBuffersMemories[i].mapMemory(0, bufferSize));
+    }
 }

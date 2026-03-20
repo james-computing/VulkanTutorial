@@ -19,6 +19,7 @@ import vulkan_hpp;
 #include <algorithm> // for std::clamp
 #include <fstream> // read shader file
 #include "../include/vertex.hpp"
+#include "../include/mvp.hpp"
 
 class Application {
 public:
@@ -91,7 +92,11 @@ private:
     vk::raii::Buffer indexBuffer {nullptr};
     vk::raii::DeviceMemory indexBufferMemory {nullptr};
 
-    vk::raii::DescriptorSetLayout descriptorSetLayout {nullptr}; // for model view projection, which uses a uniform buffer
+    vk::raii::DescriptorSetLayout descriptorSetLayout {nullptr}; // for model view projection, which uses uniform buffers
+
+    std::vector<vk::raii::Buffer> uniformBuffers; // model view projection matrices are stored in uniform buffers
+    std::vector<vk::raii::DeviceMemory> uniformBuffersMemories;
+    std::vector<void*> uniformBuffersMapped; // pointers to transfer data from host to uniform buffers
 
     /////////////////////////////////////// METHODS //////////////////////////////////////////////////
 
@@ -177,4 +182,5 @@ private:
     void createIndexBuffer();
 
     void createDescriptorSetLayout();
+    void createUniformBuffers();
 };
