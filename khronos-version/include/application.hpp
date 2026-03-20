@@ -100,6 +100,8 @@ private:
     std::vector<vk::raii::DeviceMemory> uniformBuffersMemories;
     std::vector<void*> uniformBuffersMapped; // pointers to transfer data from host to uniform buffers
 
+    vk::raii::DescriptorPool descriptorPool {nullptr};
+
     /////////////////////////////////////// METHODS //////////////////////////////////////////////////
 
     void initVulkan();
@@ -187,4 +189,6 @@ private:
     void createUniformBuffers();
     
     void updateUniformBuffer(uint32_t currentImage);
+
+    void createDescriptorPool();
 };
