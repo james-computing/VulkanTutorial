@@ -1170,7 +1170,7 @@ void Application::createDescriptorPool() {
     };
 
     vk::DescriptorPoolCreateInfo const descriptorPoolCreateInfo {
-        .flags = {}, //vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet, // won't need to touch the descriptor sets after creation
+        .flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet,
         .maxSets = MAX_FRAMES_IN_FLIGHT,
         .poolSizeCount = 1,
         .pPoolSizes = &descriptorPoolSize
