@@ -781,7 +781,7 @@ void Application::recordCommandBuffer(uint32_t imageIndex) {
 
     commandBuffer.setScissor(0, scissor);
 
-    commandBuffer.draw(3, 1, 0, 0);
+    commandBuffer.draw(vertices.size(), 1, 0, 0);
 
     commandBuffer.endRendering();
 
