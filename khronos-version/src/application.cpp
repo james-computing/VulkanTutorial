@@ -865,6 +865,8 @@ void Application::drawFrame() {
         .pSignalSemaphores = &*renderFinishedSemaphore
     };
 
+    updateUniformBuffer(frameIndex);
+
     device.resetFences(*drawFence);
     queue.submit(submitInfo, drawFence);
 
@@ -1119,4 +1121,40 @@ void Application::createUniformBuffers() {
         // Map uniform buffer to a pointer, so we can transfer data from the pointer to the uniform buffer
         uniformBuffersMapped.emplace_back(uniformBuffersMemories[i].mapMemory(0, bufferSize));
     }
+}
+
+void Application::updateUniformBuffer(uint32_t currentImage) {
+    // Get the start time from the first call to this function.
+    // Later calls won't update the start time.
+    static auto const startTime {std::chrono::high_resolution_clock::now()};
+
+    // Compute the time elapsed from start time to now. Elapsed time will parameterize the rotation.
+    auto const currenTime {std::chrono::high_resolution_clock::now()};
+    float const elapsedTime {std::chrono::duration<float, std::chrono::seconds::period>(currenTime - startTime).count()};
+
+    // Update the uniform buffer
+    UniformBufferObject ubo;
+
+    glm::vec3 constexpr up {glm::vec3(0.0f, 0.0f, 1.0f)};
+
+    // Rotate model around the z axis, according to the elapsed time.
+    glm::mat4 constexpr identity {glm::mat4(1.0f)};
+    ubo.model = glm::rotate(identity, elapsedTime * glm::radians(90.0f), up);
+
+    // View the model from a 45° angle
+    glm::vec3 constexpr eye {glm::vec3(2.0f, 2.0f, 2.0f)};
+    glm::vec3 constexpr center {glm::vec3(0.0f, 0.0f, 0.0f)};
+    ubo.view = glm::lookAt(eye, center, up);
+
+    // Perspective projection
+    float const aspectRatio {static_cast<float>(swapChainExtent.width)/static_cast<float>(swapChainExtent.height)};
+    float constexpr near {0.1f};
+    float constexpr far {10.f};
+    ubo.proj = glm::perspective(glm::radians(45.0f), aspectRatio, near, far);
+    // GLM was made for OpenGL. For Vulkan we need to flip the sign of the Y scaling factor.
+    ubo.proj[1][1] *= -1;
+
+    // Copy the ubo to the corresponding uniform buffer memory.
+    // It would be more efficient to use push constants.
+    memcpy(uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
 }
