@@ -103,6 +103,8 @@ private:
     vk::raii::DescriptorPool descriptorPool {nullptr};
     std::vector<vk::raii::DescriptorSet> descriptorSets;
 
+    std::string const texturePath {"../Rendering/textures/texture.jpg"};
+
     /////////////////////////////////////// METHODS //////////////////////////////////////////////////
 
     void initVulkan();
@@ -193,4 +195,6 @@ private:
 
     void createDescriptorPool();
     void createDescriptorSets();
+
+    void createTextureImage();
 };

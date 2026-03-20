@@ -1,5 +1,9 @@
 #include "../include/application.hpp"
 
+// Include here to avoid multiple implementation
+#define STB_IMAGE_IMPLEMENTATION
+#include "../Rendering/libraries/stb/stb_image.h"
+
 void Application::run() {
     initWindow();
     initVulkan();
@@ -18,6 +22,7 @@ void Application::initVulkan() {
     createDescriptorSetLayout();
     createGraphicsPipeline();
     createCommandPool();
+    createTextureImage();
     createVertexBuffer();
     createIndexBuffer();
     createUniformBuffers();
@@ -1213,4 +1218,38 @@ void Application::createDescriptorSets() {
 
         device.updateDescriptorSets(writeDescriptorSet, {});
     }
+}
+
+void Application::createTextureImage() {
+    int textureWidth, textureHeight, textureChannels;
+    stbi_uc * pixels {stbi_load(texturePath.c_str(), &textureWidth, &textureHeight, &textureChannels, STBI_rgb_alpha)};
+    if (!pixels) {
+        throw std::runtime_error("Failed to load texture.");
+    }
+    
+    vk::DeviceSize const imageSize {(vk::DeviceSize) (textureWidth * textureHeight * 4)};
+
+    // Create a staging buffer to receive the image
+    vk::raii::Buffer stagingBuffer {nullptr};
+    vk::raii::DeviceMemory stagingBufferMemory {nullptr};
+    vk::BufferUsageFlags constexpr bufferUsageFlags {vk::BufferUsageFlagBits::eTransferSrc};
+    vk::MemoryPropertyFlags constexpr memoryProperties {
+        // Memory visible to host and available immediately to the device
+        vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
+    };
+    createBuffer(
+        imageSize,
+        bufferUsageFlags,
+        memoryProperties,
+        stagingBuffer,
+        stagingBufferMemory
+    );
+
+    // Transfer the image to the staging buffer
+    void * data {stagingBufferMemory.mapMemory(0, imageSize)};
+    memcpy(data, pixels, imageSize);
+    stagingBufferMemory.unmapMemory();
+
+    // cleanup
+    stbi_image_free(pixels);
 }
