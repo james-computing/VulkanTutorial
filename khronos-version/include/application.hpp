@@ -82,6 +82,7 @@ private:
     };
 
     vk::raii::Buffer vertexBuffer {nullptr};
+    vk::raii::DeviceMemory vertexBufferMemory {nullptr};
 
     /////////////////////////////////////// METHODS //////////////////////////////////////////////////
 

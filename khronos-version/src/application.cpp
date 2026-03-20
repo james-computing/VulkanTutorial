@@ -923,6 +923,21 @@ void Application::createVertexBuffer() {
 
     vk::MemoryRequirements const memoryRequirements {vertexBuffer.getMemoryRequirements()};
 
+    uint32_t const memoryTypeIndex {
+        findMemoryType(
+            memoryRequirements.memoryTypeBits,
+            vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
+        )
+    };
+    vk::MemoryAllocateInfo const memoryAllocateInfo {
+        .allocationSize = memoryRequirements.size,
+        .memoryTypeIndex = memoryTypeIndex
+    };
+
+    vertexBufferMemory = vk::raii::DeviceMemory(device, memoryAllocateInfo);
+
+    vk::DeviceSize constexpr memoryOffset {0};
+    vertexBuffer.bindMemory(*vertexBufferMemory, memoryOffset);
 }
 
 uint32_t Application::findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties) {
