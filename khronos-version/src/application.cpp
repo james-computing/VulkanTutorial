@@ -788,6 +788,8 @@ void Application::recordCommandBuffer(uint32_t imageIndex) {
 
     commandBuffer.setScissor(0, scissor);
 
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, *(descriptorSets[frameIndex]), nullptr);
+
     commandBuffer.drawIndexed(indices.size(), 1, 0, 0, 0);
 
     commandBuffer.endRendering();
