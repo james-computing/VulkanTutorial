@@ -82,6 +82,10 @@ private:
         {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
     };
 
+    std::vector<uint16_t> const indices {
+        0, 1, 2, 2, 3, 0
+    };
+
     vk::raii::Buffer vertexBuffer {nullptr};
     vk::raii::DeviceMemory vertexBufferMemory {nullptr};
     vk::raii::Buffer stagingBuffer {nullptr};
