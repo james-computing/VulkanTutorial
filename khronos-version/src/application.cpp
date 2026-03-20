@@ -920,4 +920,7 @@ void Application::createVertexBuffer() {
     };
 
     vertexBuffer = vk::raii::Buffer(device, vertexBufferCreateInfo);
+
+    vk::MemoryRequirements const memoryRequirements {vertexBuffer.getMemoryRequirements()};
+    
 }
