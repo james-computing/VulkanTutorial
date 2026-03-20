@@ -15,6 +15,7 @@ void Application::initVulkan() {
     createLogicalDevice();
     createSwapChain();
     createImageViews();
+    createDescriptorSetLayout();
     createGraphicsPipeline();
     createCommandPool();
     createVertexBuffer();
@@ -591,8 +592,9 @@ void Application::createGraphicsPipeline() {
         .pAttachments =     &pipelineColorBlendAttachmentState
     };
 
-    vk::PipelineLayoutCreateInfo constexpr pipelineLayoutCreateInfo {
-        .setLayoutCount = 0,
+    vk::PipelineLayoutCreateInfo const pipelineLayoutCreateInfo {
+        .setLayoutCount = 1,
+        .pSetLayouts = &*descriptorSetLayout,
         .pushConstantRangeCount = 0
     };
 
@@ -1074,4 +1076,21 @@ void Application::createIndexBuffer() {
 
     // Copy data from staging buffer to vertex buffer
     copyBuffer(stagingBuffer, indexBuffer, bufferSize);
+}
+
+void Application::createDescriptorSetLayout() {
+    vk::DescriptorSetLayoutBinding constexpr uboDescriptorSetLayoutBinding {
+        .binding = 0,
+        .descriptorType = vk::DescriptorType::eUniformBuffer,
+        .descriptorCount = 1,
+        .stageFlags = vk::ShaderStageFlagBits::eVertex,
+        .pImmutableSamplers = nullptr
+    };
+
+    vk::DescriptorSetLayoutCreateInfo const descriptorSetLayoutCreateInfo {
+        .bindingCount = 1,
+        .pBindings = &uboDescriptorSetLayoutBinding
+    };
+
+    descriptorSetLayout = vk::raii::DescriptorSetLayout(device, descriptorSetLayoutCreateInfo);
 }

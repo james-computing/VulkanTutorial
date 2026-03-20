@@ -91,6 +91,8 @@ private:
     vk::raii::Buffer indexBuffer {nullptr};
     vk::raii::DeviceMemory indexBufferMemory {nullptr};
 
+    vk::raii::DescriptorSetLayout descriptorSetLayout {nullptr}; // for model view projection, which uses a uniform buffer
+
     /////////////////////////////////////// METHODS //////////////////////////////////////////////////
 
     void initVulkan();
@@ -173,4 +175,6 @@ private:
     void copyBuffer(vk::raii::Buffer & srcBuffer, vk::raii::Buffer & dstBuffer, vk::DeviceSize bufferSize) const;
 
     void createIndexBuffer();
+
+    void createDescriptorSetLayout();
 };
