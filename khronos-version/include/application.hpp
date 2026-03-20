@@ -151,4 +151,6 @@ private:
     static void frameBufferResizeCallback(GLFWwindow * window, int width, int height);
 
     void createVertexBuffer();
+
+    uint32_t findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties);
 };

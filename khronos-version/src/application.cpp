@@ -922,5 +922,20 @@ void Application::createVertexBuffer() {
     vertexBuffer = vk::raii::Buffer(device, vertexBufferCreateInfo);
 
     vk::MemoryRequirements const memoryRequirements {vertexBuffer.getMemoryRequirements()};
-    
+
+}
+
+uint32_t Application::findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties) {
+    vk::PhysicalDeviceMemoryProperties const memoryProperties {physicalDevice.getMemoryProperties()};
+
+    for (uint32_t i {0}; i < memoryProperties.memoryTypeCount; ++i) {
+        if (
+            (typeFilter & (1 << i)) &&
+            (memoryProperties.memoryTypes[i].propertyFlags & properties) == properties
+        ) {
+            return i;
+        }
+    }
+
+    throw std::runtime_error("Failed to find suitable memory type");
 }
