@@ -762,7 +762,8 @@ void Application::recordCommandBuffer(uint32_t imageIndex) {
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *graphicsPipeline);
 
     commandBuffer.bindVertexBuffers(0, *vertexBuffer, {0});
-
+    
+    commandBuffer.bindIndexBuffer(*indexBuffer, 0, vk::IndexType::eUint16);
 
     vk::Viewport const viewport {
         .x = 0.0f,
