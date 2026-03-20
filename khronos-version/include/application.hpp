@@ -101,6 +101,7 @@ private:
     std::vector<void*> uniformBuffersMapped; // pointers to transfer data from host to uniform buffers
 
     vk::raii::DescriptorPool descriptorPool {nullptr};
+    std::vector<vk::raii::DescriptorSet> descriptorSets;
 
     /////////////////////////////////////// METHODS //////////////////////////////////////////////////
 
@@ -191,4 +192,5 @@ private:
     void updateUniformBuffer(uint32_t currentImage);
 
     void createDescriptorPool();
+    void createDescriptorSets();
 };

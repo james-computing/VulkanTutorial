@@ -22,6 +22,7 @@ void Application::initVulkan() {
     createIndexBuffer();
     createUniformBuffers();
     createDescriptorPool();
+    createDescriptorSets();
     createCommandBuffers();
     createSyncObjects();
 }
@@ -1174,4 +1175,40 @@ void Application::createDescriptorPool() {
     };
 
     descriptorPool = vk::raii::DescriptorPool(device, descriptorPoolCreateInfo);
+}
+
+void Application::createDescriptorSets() {
+    // Vector with MAX_FRAMES_IN_FLIGHT copies of *descriptorSetLayout.
+    // It is needed because descriptorSetAllocateInfo receives an array of layouts.
+    std::vector<vk::DescriptorSetLayout> const descriptorSetLayouts {std::vector(MAX_FRAMES_IN_FLIGHT, *descriptorSetLayout)};
+
+    // Allocate descriptor sets
+    vk::DescriptorSetAllocateInfo const descriptorSetAllocateInfo {
+        .descriptorPool = descriptorPool,
+        .descriptorSetCount = MAX_FRAMES_IN_FLIGHT,
+        .pSetLayouts = descriptorSetLayouts.data()
+    };
+
+    descriptorSets = device.allocateDescriptorSets(descriptorSetAllocateInfo);
+
+    // Configure descriptor sets.
+    // Maybe could build an array of vk::WriteDescriptorSet and call device.updateDescriptorSets once.
+    for (size_t i {0}; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+        vk::DescriptorBufferInfo const descriptorBufferInfo {
+            .buffer = uniformBuffers[i],
+            .offset = 0,
+            .range = sizeof(UniformBufferObject)
+        };
+
+        vk::WriteDescriptorSet const writeDescriptorSet {
+            .dstSet = descriptorSets[i],
+            .dstBinding = 0,
+            .dstArrayElement = 0,
+            .descriptorCount = 1,
+            .descriptorType = vk::DescriptorType::eUniformBuffer,
+            .pBufferInfo = &descriptorBufferInfo
+        };
+
+        device.updateDescriptorSets(writeDescriptorSet, {});
+    }
 }
