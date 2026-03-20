@@ -943,20 +943,20 @@ void Application::createVertexBuffer() {
     vk::DeviceSize constexpr memoryOffset {0};
     vertexBuffer.bindMemory(*vertexBufferMemory, memoryOffset);
     */
-    vk::DeviceSize const size {vertices.size() * sizeof(Vertex)};
-    vk::BufferUsageFlags constexpr usage {vk::BufferUsageFlagBits::eVertexBuffer};
-    vk::MemoryPropertyFlags constexpr properties {vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent};
+    vk::DeviceSize const bufferSize {vertices.size() * sizeof(Vertex)};
+    vk::BufferUsageFlags constexpr bufferUsage {vk::BufferUsageFlagBits::eVertexBuffer};
+    vk::MemoryPropertyFlags constexpr memoryProperties {vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent};
     createBuffer(
-        size,
-        usage,
-        properties,
+        bufferSize,
+        bufferUsage,
+        memoryProperties,
         vertexBuffer,
         vertexBufferMemory
     );
 
     // Copy the data from the vertices vector to the vertex buffer memory
-    void *data {vertexBufferMemory.mapMemory(0, size)};
-    memcpy(data, vertices.data(), size);
+    void *data {vertexBufferMemory.mapMemory(0, bufferSize)};
+    memcpy(data, vertices.data(), bufferSize);
     vertexBufferMemory.unmapMemory();
 }
 
@@ -976,15 +976,15 @@ uint32_t Application::findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlag
 }
 
 void Application::createBuffer(
-    vk::DeviceSize size,
-    vk::BufferUsageFlags usage,
-    vk::MemoryPropertyFlags properties,
+    vk::DeviceSize bufferSize,
+    vk::BufferUsageFlags bufferUsage,
+    vk::MemoryPropertyFlags memoryProperties,
     vk::raii::Buffer & buffer,
     vk::raii::DeviceMemory & bufferMemory
 ) {
     vk::BufferCreateInfo const bufferCreateInfo {
-        .size = size,
-        .usage = usage,
+        .size = bufferSize,
+        .usage = bufferUsage,
         .sharingMode = vk::SharingMode::eExclusive
     };
 
@@ -995,7 +995,7 @@ void Application::createBuffer(
     uint32_t const memoryTypeIndex {
         findMemoryType(
             memoryRequirements.memoryTypeBits,
-            properties
+            memoryProperties
         )
     };
     vk::MemoryAllocateInfo const memoryAllocateInfo {

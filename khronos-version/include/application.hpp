@@ -156,9 +156,9 @@ private:
     uint32_t findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties);
 
     void createBuffer(
-        vk::DeviceSize size,
-        vk::BufferUsageFlags usage,
-        vk::MemoryPropertyFlags properties,
+        vk::DeviceSize bufferSize,
+        vk::BufferUsageFlags bufferUsage,
+        vk::MemoryPropertyFlags memoryProperties,
         vk::raii::Buffer & buffer,
         vk::raii::DeviceMemory & bufferMemory
     );
