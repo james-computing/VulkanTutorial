@@ -88,6 +88,8 @@ private:
 
     vk::raii::Buffer vertexBuffer {nullptr};
     vk::raii::DeviceMemory vertexBufferMemory {nullptr};
+    vk::raii::Buffer indexBuffer {nullptr};
+    vk::raii::DeviceMemory indexBufferMemory {nullptr};
 
     /////////////////////////////////////// METHODS //////////////////////////////////////////////////
 
@@ -169,4 +171,6 @@ private:
     );
 
     void copyBuffer(vk::raii::Buffer & srcBuffer, vk::raii::Buffer & dstBuffer, vk::DeviceSize bufferSize) const;
+
+    void createIndexBuffer();
 };
