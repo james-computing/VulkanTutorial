@@ -154,4 +154,12 @@ private:
     void createVertexBuffer();
 
     uint32_t findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties);
+
+    void createBuffer(
+        vk::DeviceSize size,
+        vk::BufferUsageFlags usage,
+        vk::MemoryPropertyFlags properties,
+        vk::raii::Buffer & buffer,
+        vk::raii::DeviceMemory & bufferMemory
+    );
 };

@@ -916,6 +916,7 @@ void Application::frameBufferResizeCallback(GLFWwindow * window, int width, int 
 }
 
 void Application::createVertexBuffer() {
+    /*
     vk::BufferCreateInfo const vertexBufferCreateInfo {
         .size = sizeof(Vertex) * vertices.size(),
         .usage = vk::BufferUsageFlagBits::eVertexBuffer,
@@ -941,10 +942,21 @@ void Application::createVertexBuffer() {
 
     vk::DeviceSize constexpr memoryOffset {0};
     vertexBuffer.bindMemory(*vertexBufferMemory, memoryOffset);
+    */
+    vk::DeviceSize const size {vertices.size() * sizeof(Vertex)};
+    vk::BufferUsageFlags constexpr usage {vk::BufferUsageFlagBits::eVertexBuffer};
+    vk::MemoryPropertyFlags constexpr properties {vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent};
+    createBuffer(
+        size,
+        usage,
+        properties,
+        vertexBuffer,
+        vertexBufferMemory
+    );
 
     // Copy the data from the vertices vector to the vertex buffer memory
-    void *data {vertexBufferMemory.mapMemory(0, vertexBufferCreateInfo.size)};
-    memcpy(data, vertices.data(), vertexBufferCreateInfo.size);
+    void *data {vertexBufferMemory.mapMemory(0, size)};
+    memcpy(data, vertices.data(), size);
     vertexBufferMemory.unmapMemory();
 }
 
@@ -961,4 +973,38 @@ uint32_t Application::findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlag
     }
 
     throw std::runtime_error("Failed to find suitable memory type");
+}
+
+void Application::createBuffer(
+    vk::DeviceSize size,
+    vk::BufferUsageFlags usage,
+    vk::MemoryPropertyFlags properties,
+    vk::raii::Buffer & buffer,
+    vk::raii::DeviceMemory & bufferMemory
+) {
+    vk::BufferCreateInfo const bufferCreateInfo {
+        .size = size,
+        .usage = usage,
+        .sharingMode = vk::SharingMode::eExclusive
+    };
+
+    buffer = vk::raii::Buffer(device, bufferCreateInfo);
+
+    vk::MemoryRequirements const memoryRequirements {buffer.getMemoryRequirements()};
+
+    uint32_t const memoryTypeIndex {
+        findMemoryType(
+            memoryRequirements.memoryTypeBits,
+            properties
+        )
+    };
+    vk::MemoryAllocateInfo const memoryAllocateInfo {
+        .allocationSize = memoryRequirements.size,
+        .memoryTypeIndex = memoryTypeIndex
+    };
+
+    bufferMemory = vk::raii::DeviceMemory(device, memoryAllocateInfo);
+
+    vk::DeviceSize constexpr memoryOffset {0};
+    buffer.bindMemory(*bufferMemory, memoryOffset);
 }
