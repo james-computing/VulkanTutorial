@@ -951,9 +951,10 @@ void Application::createVertexBuffer() {
     );
 
     // Copy the data from the vertices vector to the staging buffer memory
-    void *data {stagingBufferMemory.mapMemory(0, bufferSize)};
+    void * data {stagingBufferMemory.mapMemory(0, bufferSize)};
     memcpy(data, vertices.data(), bufferSize);
     stagingBufferMemory.unmapMemory();
+    data = nullptr;
 
     // Create the vertex buffer
     vk::BufferUsageFlags constexpr vertexbufferUsage {vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst};
@@ -1071,9 +1072,10 @@ void Application::createIndexBuffer() {
     );
 
     // Copy the data from the indices vector to the staging buffer memory
-    void *data {stagingBufferMemory.mapMemory(0, bufferSize)};
+    void * data {stagingBufferMemory.mapMemory(0, bufferSize)};
     memcpy(data, indices.data(), bufferSize);
     stagingBufferMemory.unmapMemory();
+    data = nullptr;
 
     // Create the vertex buffer
     vk::BufferUsageFlags constexpr indexbufferUsage {vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst};
@@ -1249,6 +1251,7 @@ void Application::createTextureImage() {
     void * data {stagingBufferMemory.mapMemory(0, imageSize)};
     memcpy(data, pixels, imageSize);
     stagingBufferMemory.unmapMemory();
+    data = nullptr;
 
     // cleanup
     stbi_image_free(pixels);
