@@ -24,6 +24,7 @@ void Application::initVulkan() {
     createGraphicsPipeline();
     createCommandPool();
     createTextureImage();
+    createTextureImageView();
     createVertexBuffer();
     createIndexBuffer();
     createUniformBuffers();
@@ -1429,4 +1430,8 @@ vk::raii::ImageView Application::createImageView(vk::raii::Image const & image, 
     };
 
     return vk::raii::ImageView(device, imageViewCreateInfo);
+}
+
+void Application::createTextureImageView() {
+    textureImageView = createImageView(textureImage, vk::Format::eR8G8B8A8Srgb);
 }

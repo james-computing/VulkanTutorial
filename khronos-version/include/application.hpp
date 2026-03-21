@@ -107,6 +107,7 @@ private:
 
     vk::raii::Image textureImage {nullptr};
     vk::raii::DeviceMemory textureImageMemory {nullptr};
+    vk::raii::ImageView textureImageView {nullptr};
 
     /////////////////////////////////////// METHODS //////////////////////////////////////////////////
 
@@ -228,4 +229,5 @@ private:
     ) const;
 
     vk::raii::ImageView createImageView(vk::raii::Image const & image, vk::Format format) const;
+    void createTextureImageView();
 };
