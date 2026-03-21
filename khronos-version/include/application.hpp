@@ -187,7 +187,7 @@ private:
         vk::raii::DeviceMemory & bufferMemory
     );
 
-    void copyBuffer(vk::raii::Buffer & srcBuffer, vk::raii::Buffer & dstBuffer, vk::DeviceSize bufferSize) const;
+    void copyBuffer(vk::raii::Buffer const & srcBuffer, vk::raii::Buffer & dstBuffer, vk::DeviceSize bufferSize) const;
 
     void createIndexBuffer();
 
