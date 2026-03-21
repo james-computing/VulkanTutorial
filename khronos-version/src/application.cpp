@@ -1022,18 +1022,8 @@ void Application::createBuffer(
 }
 
 void Application::copyBuffer(vk::raii::Buffer & srcBuffer, vk::raii::Buffer & dstBuffer, vk::DeviceSize bufferSize) const {
-    vk::CommandBufferAllocateInfo const commandBufferAllocateInfo {
-        .commandPool = commandPool,
-        .level = vk::CommandBufferLevel::ePrimary,
-        .commandBufferCount = 1
-    };
-
-    vk::raii::CommandBuffer const commandCopyBuffer {std::move(device.allocateCommandBuffers(commandBufferAllocateInfo).front())};
-
-    vk::CommandBufferBeginInfo constexpr commandBufferBeginInfo {
-        .flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit
-    };
-    commandCopyBuffer.begin(commandBufferBeginInfo);
+    vk::raii::CommandBuffer commandCopyBuffer {nullptr};
+    beginSingleTimeCommands(commandCopyBuffer);
 
     vk::BufferCopy const region {
         .srcOffset = 0,
@@ -1043,14 +1033,7 @@ void Application::copyBuffer(vk::raii::Buffer & srcBuffer, vk::raii::Buffer & ds
 
     commandCopyBuffer.copyBuffer(*srcBuffer, *dstBuffer, region);
 
-    commandCopyBuffer.end();
-
-    vk::SubmitInfo const submitInfo {
-        .commandBufferCount = 1,
-        .pCommandBuffers = &*commandCopyBuffer
-    };
-    queue.submit(submitInfo, {});
-    queue.waitIdle();
+    endSingleTimeCommands(commandCopyBuffer);
 }
 
 void Application::createIndexBuffer() {
@@ -1311,4 +1294,30 @@ void Application::createImage(
     imageMemory = vk::raii::DeviceMemory(device, memoryAllocateInfo);
     // Bind the memory
     image.bindMemory(imageMemory, 0);
+}
+
+void Application::beginSingleTimeCommands(vk::raii::CommandBuffer & commandBuffer) const {
+    vk::CommandBufferAllocateInfo const commandBufferAllocateInfo {
+        .commandPool = commandPool,
+        .level = vk::CommandBufferLevel::ePrimary,
+        .commandBufferCount = 1
+    };
+
+    commandBuffer = std::move(device.allocateCommandBuffers(commandBufferAllocateInfo).front());
+
+    vk::CommandBufferBeginInfo constexpr commandBufferBeginInfo {
+        .flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit
+    };
+    commandBuffer.begin(commandBufferBeginInfo);
+}
+
+void Application::endSingleTimeCommands(vk::raii::CommandBuffer const & commandBuffer) const {
+    commandBuffer.end();
+
+    vk::SubmitInfo const submitInfo {
+        .commandBufferCount = 1,
+        .pCommandBuffers = &*commandBuffer
+    };
+    queue.submit(submitInfo, {});
+    queue.waitIdle();
 }

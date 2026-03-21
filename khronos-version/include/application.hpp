@@ -210,4 +210,7 @@ private:
         vk::raii::Image & image,
         vk::raii::DeviceMemory & imageMemory
     );
+
+    void beginSingleTimeCommands(vk::raii::CommandBuffer & commandBuffer) const;
+    void endSingleTimeCommands(vk::raii::CommandBuffer const & commandBuffer) const;
 };
