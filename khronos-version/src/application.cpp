@@ -1021,7 +1021,7 @@ void Application::createBuffer(
     buffer.bindMemory(*bufferMemory, memoryOffset);
 }
 
-void Application::copyBuffer(vk::raii::Buffer const & srcBuffer, vk::raii::Buffer & dstBuffer, vk::DeviceSize bufferSize) const {
+void Application::copyBuffer(vk::raii::Buffer const & srcBuffer, vk::raii::Buffer const & dstBuffer, vk::DeviceSize bufferSize) const {
     vk::raii::CommandBuffer commandCopyBuffer {nullptr};
     beginSingleTimeCommands(commandCopyBuffer);
 
