@@ -226,4 +226,6 @@ private:
         uint32_t width,
         uint32_t height
     ) const;
+
+    vk::raii::ImageView createImageView(vk::raii::Image const & image, vk::Format format) const;
 };

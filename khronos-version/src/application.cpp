@@ -498,10 +498,11 @@ void Application::createImageViews() {
         }
     };
 
+    // Could use createImageView in this for loop, but won't, because it could be creating multiple
+    // copiies of imageViewCreateInfo unnecessarily.
     for (vk::Image & image : swapChainImages) {
         imageViewCreateInfo.image = image;
-        // vk::raii::CreateImageView is implicit? Compiler says the function doesn't exists
-        swapChainImageViews.emplace_back(device, imageViewCreateInfo);
+        swapChainImageViews.emplace_back(vk::raii::ImageView(device, imageViewCreateInfo));
     }
 }
 
@@ -1411,4 +1412,21 @@ void Application::copyBufferToImage(
     commandBuffer.copyBufferToImage(*buffer, *image, vk::ImageLayout::eTransferDstOptimal, region);
 
     endSingleTimeCommands(commandBuffer);
+}
+
+vk::raii::ImageView Application::createImageView(vk::raii::Image const & image, vk::Format format) const {
+    vk::ImageViewCreateInfo const imageViewCreateInfo {
+        .image = image,
+        .viewType = vk::ImageViewType::e2D,
+        .format = format,
+        .subresourceRange = {
+            .aspectMask = vk::ImageAspectFlagBits::eColor,
+            .baseMipLevel = 0,
+            .levelCount = 1,
+            .baseArrayLayer = 0,
+            .layerCount = 1
+        }
+    };
+
+    return vk::raii::ImageView(device, imageViewCreateInfo);
 }
