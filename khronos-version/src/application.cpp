@@ -1262,9 +1262,9 @@ void Application::createTextureImage() {
         swapChainSurfaceFormat.format,
         imageTiling,
         imageUsage,
-        //imageMemoryProperties,
-        textureImage//,
-        //textureImageMemory
+        imageMemoryProperties,
+        textureImage,
+        textureImageMemory
     );
 }
 
@@ -1274,10 +1274,10 @@ void Application::createImage(
     vk::Format imageFormat,
     vk::ImageTiling imageTiling,
     vk::ImageUsageFlags imageUsage,
-    //vk::MemoryPropertyFlags imageMemoryProperties,
-    vk::raii::Image & image//,
-    //vk::raii::DeviceMemory & imageMemory
-) const {
+    vk::MemoryPropertyFlags imageMemoryProperties,
+    vk::raii::Image & image,
+    vk::raii::DeviceMemory & imageMemory
+) {
     vk::Extent3D const extent {
         .width = width,
         .height = height,
@@ -1297,4 +1297,14 @@ void Application::createImage(
     };
 
     image = vk::raii::Image(device, imageCreateInfo);
+
+    // Allocate memory for the image
+    vk::MemoryRequirements const memoryRequirements {image.getMemoryRequirements()};
+    vk::MemoryAllocateInfo const memoryAllocateInfo {
+        .allocationSize = memoryRequirements.size,
+        .memoryTypeIndex = findMemoryType(memoryRequirements.memoryTypeBits, imageMemoryProperties)
+    };
+    imageMemory = vk::raii::DeviceMemory(device, memoryAllocateInfo);
+    // Bind the memory
+    image.bindMemory(imageMemory, 0);
 }

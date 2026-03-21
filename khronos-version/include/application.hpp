@@ -106,6 +106,7 @@ private:
     std::string const texturePath {"../Rendering/textures/texture.jpg"};
 
     vk::raii::Image textureImage {nullptr};
+    vk::raii::DeviceMemory textureImageMemory {nullptr};
 
     /////////////////////////////////////// METHODS //////////////////////////////////////////////////
 
@@ -205,8 +206,8 @@ private:
         vk::Format imageFormat,
         vk::ImageTiling imageTiling,
         vk::ImageUsageFlags imageUsage,
-        //vk::MemoryPropertyFlags imageMemoryProperties,
-        vk::raii::Image & image//,
-        //vk::raii::DeviceMemory & imageMemory
-    ) const;
+        vk::MemoryPropertyFlags imageMemoryProperties,
+        vk::raii::Image & image,
+        vk::raii::DeviceMemory & imageMemory
+    );
 };
