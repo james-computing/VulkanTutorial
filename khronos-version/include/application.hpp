@@ -222,7 +222,7 @@ private:
 
     void copyBufferToImage(
         vk::raii::Buffer const & buffer,
-        vk::raii::Image & image,
+        vk::raii::Image const & image,
         uint32_t width,
         uint32_t height
     ) const;

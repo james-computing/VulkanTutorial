@@ -1376,7 +1376,7 @@ void Application::transitionImageLayout(
 
 void Application::copyBufferToImage(
     vk::raii::Buffer const & buffer,
-    vk::raii::Image & image,
+    vk::raii::Image const & image,
     uint32_t width,
     uint32_t height
 ) const {
@@ -1408,7 +1408,7 @@ void Application::copyBufferToImage(
         }
     };
 
-    commandBuffer.copyBufferToImage(buffer, image, vk::ImageLayout::eTransferDstOptimal, region);
+    commandBuffer.copyBufferToImage(*buffer, *image, vk::ImageLayout::eTransferDstOptimal, region);
 
     endSingleTimeCommands(commandBuffer);
 }
