@@ -1253,6 +1253,13 @@ void Application::createTextureImage() {
         textureImage,
         textureImageMemory
     );
+    
+    // Transition image layout to receive texture
+    transitionImageLayout(textureImage, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
+    // Copy texture from staging buffer to image
+    copyBufferToImage(stagingBuffer, textureImage, static_cast<uint32_t>(textureWidth), static_cast<uint32_t>(textureHeight));
+    // Transition image layout to be read from shader
+    transitionImageLayout(textureImage, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 }
 
 void Application::createImage(
@@ -1320,4 +1327,88 @@ void Application::endSingleTimeCommands(vk::raii::CommandBuffer const & commandB
     };
     queue.submit(submitInfo, {});
     queue.waitIdle();
+}
+
+void Application::transitionImageLayout(
+    vk::raii::Image const & image,
+    vk::ImageLayout oldLayout,
+    vk::ImageLayout newLayout
+) const {
+    vk::raii::CommandBuffer commandBuffer {nullptr};
+    beginSingleTimeCommands(commandBuffer);
+
+    vk::ImageMemoryBarrier barrier {
+        .oldLayout = oldLayout,
+        .newLayout = newLayout,
+        .image = image,
+        .subresourceRange = vk::ImageSubresourceRange {
+            .aspectMask = vk::ImageAspectFlagBits::eColor,
+            .baseMipLevel = 0,
+            .levelCount = 1,
+            .baseArrayLayer = 0,
+            .layerCount = 1
+        }
+    };
+
+    vk::PipelineStageFlags sourceStage;
+    vk::PipelineStageFlags destinationStage;
+
+    if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eTransferDstOptimal) {
+        barrier.srcAccessMask = {};
+        barrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
+        
+        sourceStage = vk::PipelineStageFlagBits::eTopOfPipe;
+        destinationStage = vk::PipelineStageFlagBits::eTransfer;
+    } else if (oldLayout == vk::ImageLayout::eTransferDstOptimal && newLayout == vk::ImageLayout::eShaderReadOnlyOptimal) {
+        barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
+        barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+
+        sourceStage = vk::PipelineStageFlagBits::eTransfer;
+        destinationStage = vk::PipelineStageFlagBits::eFragmentShader;
+    } else {
+        throw std::invalid_argument("Unsupported image layout transition");
+    }
+
+    commandBuffer.pipelineBarrier(sourceStage, destinationStage, {}, {}, nullptr, barrier);
+
+    endSingleTimeCommands(commandBuffer);
+}
+
+void Application::copyBufferToImage(
+    vk::raii::Buffer const & buffer,
+    vk::raii::Image & image,
+    uint32_t width,
+    uint32_t height
+) const {
+    vk::raii::CommandBuffer commandBuffer {nullptr};
+    beginSingleTimeCommands(commandBuffer);
+
+
+    vk::ImageSubresourceLayers constexpr imageSubresource {
+        .aspectMask = vk::ImageAspectFlagBits::eColor,
+        .mipLevel = 0,
+        .baseArrayLayer = 0,
+        .layerCount = 1
+    };
+    vk::Offset3D constexpr offset3D {
+        .x = 0,
+        .y = 0,
+        .z = 0
+    };
+    vk::BufferImageCopy const region {
+        .bufferOffset = 0,
+        .bufferRowLength = 0,
+        .bufferImageHeight = 0,
+        .imageSubresource = imageSubresource,
+        .imageOffset = offset3D, 
+        .imageExtent = vk::Extent3D {
+            .width = width,
+            .height = height,
+            .depth = 1
+        }
+    };
+
+    commandBuffer.copyBufferToImage(buffer, image, vk::ImageLayout::eTransferDstOptimal, region);
+
+    endSingleTimeCommands(commandBuffer);
 }

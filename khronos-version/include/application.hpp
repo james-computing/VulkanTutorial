@@ -213,4 +213,17 @@ private:
 
     void beginSingleTimeCommands(vk::raii::CommandBuffer & commandBuffer) const;
     void endSingleTimeCommands(vk::raii::CommandBuffer const & commandBuffer) const;
+
+    void transitionImageLayout(
+        vk::raii::Image const & image,
+        vk::ImageLayout oldLayout,
+        vk::ImageLayout newLayout
+    ) const;
+
+    void copyBufferToImage(
+        vk::raii::Buffer const & buffer,
+        vk::raii::Image & image,
+        uint32_t width,
+        uint32_t height
+    ) const;
 };
