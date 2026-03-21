@@ -199,4 +199,14 @@ private:
     void createDescriptorSets();
 
     void createTextureImage();
+    void createImage(
+        uint32_t width,
+        uint32_t height,
+        vk::Format imageFormat,
+        vk::ImageTiling imageTiling,
+        vk::ImageUsageFlags imageUsage,
+        //vk::MemoryPropertyFlags imageMemoryProperties,
+        vk::raii::Image & image//,
+        //vk::raii::DeviceMemory & imageMemory
+    ) const;
 };

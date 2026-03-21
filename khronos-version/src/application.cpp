@@ -1232,15 +1232,15 @@ void Application::createTextureImage() {
     // Create a staging buffer to receive the image
     vk::raii::Buffer stagingBuffer {nullptr};
     vk::raii::DeviceMemory stagingBufferMemory {nullptr};
-    vk::BufferUsageFlags constexpr bufferUsageFlags {vk::BufferUsageFlagBits::eTransferSrc};
-    vk::MemoryPropertyFlags constexpr memoryProperties {
+    vk::BufferUsageFlags constexpr stagingBufferUsageFlags {vk::BufferUsageFlagBits::eTransferSrc};
+    vk::MemoryPropertyFlags constexpr stagingBufferMemoryProperties {
         // Memory visible to host and available immediately to the device
         vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
     };
     createBuffer(
         imageSize,
-        bufferUsageFlags,
-        memoryProperties,
+        stagingBufferUsageFlags,
+        stagingBufferMemoryProperties,
         stagingBuffer,
         stagingBufferMemory
     );
@@ -1253,23 +1253,48 @@ void Application::createTextureImage() {
     // cleanup
     stbi_image_free(pixels);
 
-    vk::Extent3D const textureExtent {
-        .width = static_cast<uint32_t>(textureWidth),
-        .height = static_cast<uint32_t>(textureHeight),
+    vk::ImageTiling constexpr imageTiling {vk::ImageTiling::eOptimal};
+    vk::ImageUsageFlags constexpr imageUsage {vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled};
+    vk::MemoryPropertyFlags constexpr imageMemoryProperties {};
+    createImage(
+        static_cast<uint32_t>(textureWidth),
+        static_cast<uint32_t>(textureHeight),
+        swapChainSurfaceFormat.format,
+        imageTiling,
+        imageUsage,
+        //imageMemoryProperties,
+        textureImage//,
+        //textureImageMemory
+    );
+}
+
+void Application::createImage(
+    uint32_t width,
+    uint32_t height,
+    vk::Format imageFormat,
+    vk::ImageTiling imageTiling,
+    vk::ImageUsageFlags imageUsage,
+    //vk::MemoryPropertyFlags imageMemoryProperties,
+    vk::raii::Image & image//,
+    //vk::raii::DeviceMemory & imageMemory
+) const {
+    vk::Extent3D const extent {
+        .width = width,
+        .height = height,
         .depth = 1
     };
     vk::ImageCreateInfo const imageCreateInfo {
         .imageType = vk::ImageType::e2D,
-        .format = swapChainSurfaceFormat.format,
-        .extent = textureExtent,
+        .format = imageFormat,
+        .extent = extent,
         .mipLevels = 1,
         .arrayLayers = 1,
         .samples = vk::SampleCountFlagBits::e1,
-        .tiling = vk::ImageTiling::eOptimal,
-        .usage = vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
+        .tiling = imageTiling,
+        .usage = imageUsage,
         .sharingMode = vk::SharingMode::eExclusive,
         .initialLayout = vk::ImageLayout::eUndefined
     };
 
-    textureImage = vk::raii::Image(device, imageCreateInfo);
+    image = vk::raii::Image(device, imageCreateInfo);
 }
