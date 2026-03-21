@@ -1247,7 +1247,7 @@ void Application::createTextureImage() {
     createImage(
         static_cast<uint32_t>(textureWidth),
         static_cast<uint32_t>(textureHeight),
-        swapChainSurfaceFormat.format,
+        vk::Format::eR8G8B8A8Srgb,
         imageTiling,
         imageUsage,
         imageMemoryProperties,
