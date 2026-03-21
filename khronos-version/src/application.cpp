@@ -1,8 +1,9 @@
 #include "../include/application.hpp"
 
-// Include here to avoid multiple implementation
+// Include here to avoid multiple implementation.
+// STB is for loading the texture image.
 #define STB_IMAGE_IMPLEMENTATION
-#include "../Rendering/libraries/stb/stb_image.h"
+#include "../original-version/Rendering/libraries/stb/stb_image.h"
 
 void Application::run() {
     initWindow();

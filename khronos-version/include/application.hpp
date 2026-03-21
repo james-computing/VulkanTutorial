@@ -103,7 +103,7 @@ private:
     vk::raii::DescriptorPool descriptorPool {nullptr};
     std::vector<vk::raii::DescriptorSet> descriptorSets;
 
-    std::string const texturePath {"../Rendering/textures/texture.jpg"};
+    std::string const texturePath {"../original-version/Rendering/textures/texture.jpg"};
 
     vk::raii::Image textureImage {nullptr};
     vk::raii::DeviceMemory textureImageMemory {nullptr};
