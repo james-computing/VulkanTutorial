@@ -1258,7 +1258,7 @@ void Application::createTextureImage() {
 
     vk::ImageTiling constexpr imageTiling {vk::ImageTiling::eOptimal};
     vk::ImageUsageFlags constexpr imageUsage {vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled};
-    vk::MemoryPropertyFlags constexpr imageMemoryProperties {};
+    vk::MemoryPropertyFlags constexpr imageMemoryProperties {vk::MemoryPropertyFlagBits::eDeviceLocal};
     createImage(
         static_cast<uint32_t>(textureWidth),
         static_cast<uint32_t>(textureHeight),
