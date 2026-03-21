@@ -1252,4 +1252,24 @@ void Application::createTextureImage() {
 
     // cleanup
     stbi_image_free(pixels);
+
+    vk::Extent3D const textureExtent {
+        .width = static_cast<uint32_t>(textureWidth),
+        .height = static_cast<uint32_t>(textureHeight),
+        .depth = 1
+    };
+    vk::ImageCreateInfo const imageCreateInfo {
+        .imageType = vk::ImageType::e2D,
+        .format = swapChainSurfaceFormat.format,
+        .extent = textureExtent,
+        .mipLevels = 1,
+        .arrayLayers = 1,
+        .samples = vk::SampleCountFlagBits::e1,
+        .tiling = vk::ImageTiling::eOptimal,
+        .usage = vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
+        .sharingMode = vk::SharingMode::eExclusive,
+        .initialLayout = vk::ImageLayout::eUndefined
+    };
+
+    textureImage = vk::raii::Image(device, imageCreateInfo);
 }

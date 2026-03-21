@@ -105,6 +105,8 @@ private:
 
     std::string const texturePath {"../Rendering/textures/texture.jpg"};
 
+    vk::raii::Image textureImage {nullptr};
+
     /////////////////////////////////////// METHODS //////////////////////////////////////////////////
 
     void initVulkan();
