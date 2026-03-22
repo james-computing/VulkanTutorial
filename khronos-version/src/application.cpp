@@ -25,6 +25,7 @@ void Application::initVulkan() {
     createCommandPool();
     createTextureImage();
     createTextureImageView();
+    createTextureSampler();
     createVertexBuffer();
     createIndexBuffer();
     createUniformBuffers();
@@ -273,10 +274,11 @@ bool Application::isDeviceSuitable(vk::raii::PhysicalDevice const & physicalDevi
     };
     bool const supportsRequiredFeatures {
         
-        features.template get<vk::PhysicalDeviceVulkan11Features>().shaderDrawParameters &&// for shader module creation
+        features.template get<vk::PhysicalDeviceVulkan11Features>().shaderDrawParameters && // for shader module creation
         features.template get<vk::PhysicalDeviceVulkan13Features>().dynamicRendering &&
         features.template get<vk::PhysicalDeviceVulkan13Features>().synchronization2 &&
-        features.template get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>().extendedDynamicState
+        features.template get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>().extendedDynamicState &&
+        features.template get<vk::PhysicalDeviceFeatures2>().features.samplerAnisotropy // for texture sampler
     };
 
     return supportsVulkan1_3 && supportsGraphics && supportsAllRequiredExtensions && supportsRequiredFeatures;
@@ -337,7 +339,7 @@ void Application::createLogicalDevice() {
         vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT,
         vk::PhysicalDeviceVulkan11Features
     > const featureChain {
-        {},
+        {.features = {.samplerAnisotropy = true }},
         {
             .synchronization2 = true, // sync objects
             .dynamicRendering = true
@@ -1434,4 +1436,28 @@ vk::raii::ImageView Application::createImageView(vk::raii::Image const & image, 
 
 void Application::createTextureImageView() {
     textureImageView = createImageView(textureImage, vk::Format::eR8G8B8A8Srgb);
+}
+
+void Application::createTextureSampler() {
+    vk::PhysicalDeviceProperties physicalDeviceProperties {physicalDevice.getProperties()};
+
+    vk::SamplerCreateInfo const samplerCreateInfo {
+        .magFilter = vk::Filter::eLinear,
+        .minFilter = vk::Filter::eLinear,
+        .mipmapMode = vk::SamplerMipmapMode::eLinear,
+        .addressModeU = vk::SamplerAddressMode::eRepeat,
+        .addressModeV = vk::SamplerAddressMode::eRepeat,
+        .addressModeW = vk::SamplerAddressMode::eRepeat,
+        .mipLodBias = 0.0f,
+        .anisotropyEnable = vk::True,
+        .maxAnisotropy = physicalDeviceProperties.limits.maxSamplerAnisotropy,
+        .compareEnable = vk::False,
+        .compareOp = vk::CompareOp::eAlways,
+        .minLod = 0.0f,
+        .maxLod = 0.0f,
+        .borderColor = vk::BorderColor::eIntOpaqueBlack,
+        .unnormalizedCoordinates = vk::False
+    };
+
+    textureSampler = vk::raii::Sampler(device, samplerCreateInfo);
 }
