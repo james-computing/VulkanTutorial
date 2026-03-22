@@ -543,7 +543,7 @@ void Application::createGraphicsPipeline() {
 
 
     vk::VertexInputBindingDescription constexpr bindingDescription {Vertex::getBindingDescription()};
-    std::array<vk::VertexInputAttributeDescription, 2> constexpr attributeDescriptions {Vertex::getAttributeDescriptions()};
+    std::array<vk::VertexInputAttributeDescription, 3> constexpr attributeDescriptions {Vertex::getAttributeDescriptions()};
     vk::PipelineVertexInputStateCreateInfo const vertexInputCreateInfo {
         .vertexBindingDescriptionCount = 1,
         .pVertexBindingDescriptions = &bindingDescription,
