@@ -23,6 +23,7 @@ void Application::initVulkan() {
     createDescriptorSetLayout();
     createGraphicsPipeline();
     createCommandPool();
+    createDepthResources();
     createTextureImage();
     createTextureImageView();
     createTextureSampler();
@@ -1547,4 +1548,23 @@ vk::Format Application::findDepthFormat() const {
 
 bool Application::hasStencilComponent(vk::Format format) const {
     return format == vk::Format::eD32SfloatS8Uint || format == vk::Format::eD24UnormS8Uint;
+}
+
+void Application::createDepthResources() {
+    vk::Format depthFormat = findDepthFormat();
+
+    // Create depth image, allocate memory for it and bind it
+    createImage(
+        swapChainExtent.width,
+        swapChainExtent.height,
+        depthFormat,
+        vk::ImageTiling::eOptimal,
+        vk::ImageUsageFlagBits::eDepthStencilAttachment,
+        vk::MemoryPropertyFlagBits::eDeviceLocal,
+        depthImage,
+        depthImageMemory
+    );
+
+    // Create depth image view
+    depthImageView = createImageView(depthImage, depthFormat, vk::ImageAspectFlagBits::eDepth);
 }

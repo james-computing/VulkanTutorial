@@ -119,6 +119,10 @@ private:
     vk::raii::ImageView textureImageView {nullptr};
     vk::raii::Sampler textureSampler {nullptr};
 
+    vk::raii::Image depthImage {nullptr};
+    vk::raii::DeviceMemory depthImageMemory {nullptr};
+    vk::raii::ImageView depthImageView {nullptr};
+
     /////////////////////////////////////// METHODS //////////////////////////////////////////////////
 
     void initVulkan();
@@ -253,4 +257,5 @@ private:
     ) const;
     vk::Format findDepthFormat() const;
     bool hasStencilComponent(vk::Format format) const;
+    void createDepthResources();
 };
