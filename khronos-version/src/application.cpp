@@ -1469,7 +1469,7 @@ vk::raii::ImageView Application::createImageView(
         .image = image,
         .viewType = vk::ImageViewType::e2D,
         .format = format,
-        .subresourceRange = {
+        .subresourceRange = vk::ImageSubresourceRange {
             .aspectMask = aspectFlags,
             .baseMipLevel = 0,
             .levelCount = 1,
