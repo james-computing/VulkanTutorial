@@ -1460,13 +1460,17 @@ void Application::copyBufferToImage(
     endSingleTimeCommands(commandBuffer);
 }
 
-vk::raii::ImageView Application::createImageView(vk::raii::Image const & image, vk::Format format) const {
+vk::raii::ImageView Application::createImageView(
+    vk::raii::Image const & image,
+    vk::Format format,
+    vk::ImageAspectFlags aspectFlags
+) const {
     vk::ImageViewCreateInfo const imageViewCreateInfo {
         .image = image,
         .viewType = vk::ImageViewType::e2D,
         .format = format,
         .subresourceRange = {
-            .aspectMask = vk::ImageAspectFlagBits::eColor,
+            .aspectMask = aspectFlags,
             .baseMipLevel = 0,
             .levelCount = 1,
             .baseArrayLayer = 0,
@@ -1478,7 +1482,7 @@ vk::raii::ImageView Application::createImageView(vk::raii::Image const & image, 
 }
 
 void Application::createTextureImageView() {
-    textureImageView = createImageView(textureImage, vk::Format::eR8G8B8A8Srgb);
+    textureImageView = createImageView(textureImage, vk::Format::eR8G8B8A8Srgb, vk::ImageAspectFlagBits::eColor);
 }
 
 void Application::createTextureSampler() {

@@ -238,7 +238,11 @@ private:
         uint32_t height
     ) const;
 
-    vk::raii::ImageView createImageView(vk::raii::Image const & image, vk::Format format) const;
+    vk::raii::ImageView createImageView(
+        vk::raii::Image const & image,
+        vk::Format format,
+        vk::ImageAspectFlags aspectFlags
+    ) const;
     void createTextureImageView();
     void createTextureSampler();
 
