@@ -1530,3 +1530,13 @@ vk::Format Application::findSupportedFormat(
     }
     throw std::runtime_error("Failed to find supported format");
 }
+
+vk::Format Application::findDepthFormat() const {
+    std::vector<vk::Format> const candidateFormats {
+        vk::Format::eD32Sfloat,
+        vk::Format::eD32SfloatS8Uint,
+        vk::Format::eD24UnormS8Uint
+    };
+
+    return findSupportedFormat(candidateFormats, vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment);
+}

@@ -247,4 +247,5 @@ private:
         vk::ImageTiling tiling,
         vk::FormatFeatureFlags features
     ) const;
+    vk::Format findDepthFormat() const;
 };
