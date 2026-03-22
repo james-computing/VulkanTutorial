@@ -1089,9 +1089,22 @@ void Application::createDescriptorSetLayout() {
         .pImmutableSamplers = nullptr
     };
 
+    vk::DescriptorSetLayoutBinding constexpr combinedImageSamplerDescriptorSetLayoutBinding {
+        .binding = 1,
+        .descriptorType = vk::DescriptorType::eCombinedImageSampler,
+        .descriptorCount = 1,
+        .stageFlags = vk::ShaderStageFlagBits::eFragment,
+        .pImmutableSamplers = nullptr
+    };
+
+    std::array<vk::DescriptorSetLayoutBinding, 2> bindings {
+        uboDescriptorSetLayoutBinding, 
+        combinedImageSamplerDescriptorSetLayoutBinding
+    };
+
     vk::DescriptorSetLayoutCreateInfo const descriptorSetLayoutCreateInfo {
-        .bindingCount = 1,
-        .pBindings = &uboDescriptorSetLayoutBinding
+        .bindingCount = static_cast<uint32_t>(bindings.size()),
+        .pBindings = bindings.data()
     };
 
     descriptorSetLayout = vk::raii::DescriptorSetLayout(device, descriptorSetLayoutCreateInfo);
@@ -1159,16 +1172,26 @@ void Application::updateUniformBuffer(uint32_t currentImage) {
 }
 
 void Application::createDescriptorPool() {
-    vk::DescriptorPoolSize const descriptorPoolSize {
+    vk::DescriptorPoolSize const uniformBufferDescriptorPoolSize {
         .type = vk::DescriptorType::eUniformBuffer,
         .descriptorCount = MAX_FRAMES_IN_FLIGHT
+    };
+
+    vk::DescriptorPoolSize const combinedImageSamplerDescriptorPoolSize {
+        .type = vk::DescriptorType::eCombinedImageSampler,
+        .descriptorCount = MAX_FRAMES_IN_FLIGHT
+    };
+
+    std::array<vk::DescriptorPoolSize, 2> descriptorPoolSizes {
+        uniformBufferDescriptorPoolSize,
+        combinedImageSamplerDescriptorPoolSize
     };
 
     vk::DescriptorPoolCreateInfo const descriptorPoolCreateInfo {
         .flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet,
         .maxSets = MAX_FRAMES_IN_FLIGHT,
-        .poolSizeCount = 1,
-        .pPoolSizes = &descriptorPoolSize
+        .poolSizeCount = static_cast<uint32_t>(descriptorPoolSizes.size()),
+        .pPoolSizes = descriptorPoolSizes.data()
     };
 
     descriptorPool = vk::raii::DescriptorPool(device, descriptorPoolCreateInfo);
@@ -1197,7 +1220,7 @@ void Application::createDescriptorSets() {
             .range = sizeof(UniformBufferObject)
         };
 
-        vk::WriteDescriptorSet const writeDescriptorSet {
+        vk::WriteDescriptorSet const uniformBufferWriteDescriptorSet {
             .dstSet = descriptorSets[i],
             .dstBinding = 0,
             .dstArrayElement = 0,
@@ -1206,7 +1229,27 @@ void Application::createDescriptorSets() {
             .pBufferInfo = &descriptorBufferInfo
         };
 
-        device.updateDescriptorSets(writeDescriptorSet, {});
+        vk::DescriptorImageInfo const descriptorImageInfo {
+            .sampler = textureSampler,
+            .imageView = textureImageView,
+            .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal
+        };
+
+        vk::WriteDescriptorSet const combinedImageSamplerWriteDescriptorSet {
+            .dstSet = descriptorSets[i],
+            .dstBinding = 1,
+            .dstArrayElement = 0,
+            .descriptorCount = 1,
+            .descriptorType = vk::DescriptorType::eCombinedImageSampler,
+            .pImageInfo = &descriptorImageInfo
+        };
+
+        std::array<vk::WriteDescriptorSet, 2> writeDescriptorSets {
+            uniformBufferWriteDescriptorSet,
+            combinedImageSamplerWriteDescriptorSet
+        };
+
+        device.updateDescriptorSets(writeDescriptorSets, {});
     }
 }
 
