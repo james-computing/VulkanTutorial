@@ -241,4 +241,10 @@ private:
     vk::raii::ImageView createImageView(vk::raii::Image const & image, vk::Format format) const;
     void createTextureImageView();
     void createTextureSampler();
+
+    vk::Format findSupportedFormat(
+        std::vector<vk::Format> const & candidateFormats,
+        vk::ImageTiling tiling,
+        vk::FormatFeatureFlags features
+    ) const;
 };

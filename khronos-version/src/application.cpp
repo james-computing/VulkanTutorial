@@ -1504,3 +1504,29 @@ void Application::createTextureSampler() {
 
     textureSampler = vk::raii::Sampler(device, samplerCreateInfo);
 }
+
+vk::Format Application::findSupportedFormat(
+    std::vector<vk::Format> const & candidateFormats,
+    vk::ImageTiling tiling,
+    vk::FormatFeatureFlags features
+) const {
+    switch (tiling) {
+        case vk::ImageTiling::eLinear:
+            for (vk::Format const & format : candidateFormats) {
+                vk::FormatProperties const props {physicalDevice.getFormatProperties(format)};
+                if (props.linearTilingFeatures == features) {
+                    return format;
+                }
+            }
+            break;
+        case vk::ImageTiling::eOptimal:
+            for (vk::Format const & format : candidateFormats) {
+                vk::FormatProperties const props {physicalDevice.getFormatProperties(format)};
+                if (props.optimalTilingFeatures == features) {
+                    return format;
+                }
+            }
+            break;
+    }
+    throw std::runtime_error("Failed to find supported format");
+}
