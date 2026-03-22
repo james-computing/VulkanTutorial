@@ -12,7 +12,7 @@ import vulkan_hpp;
 #include <glm/glm.hpp> // for vectors and matrices for computer graphics
 
 struct Vertex {
-    glm::vec2 position;
+    glm::vec3 position;
     glm::vec3 color;
     glm::vec2 textureCoord;
 
@@ -29,7 +29,7 @@ struct Vertex {
             vk::VertexInputAttributeDescription {
                 .location = 0,
                 .binding = 0,
-                .format = vk::Format::eR32G32Sfloat, // float2
+                .format = vk::Format::eR32G32B32Sfloat, // float3
                 .offset = offsetof(Vertex, position),
             },
             vk::VertexInputAttributeDescription {
