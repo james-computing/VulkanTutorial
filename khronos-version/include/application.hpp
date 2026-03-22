@@ -248,4 +248,5 @@ private:
         vk::FormatFeatureFlags features
     ) const;
     vk::Format findDepthFormat() const;
+    bool hasStencilComponent(vk::Format format) const;
 };

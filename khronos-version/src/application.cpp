@@ -1540,3 +1540,7 @@ vk::Format Application::findDepthFormat() const {
 
     return findSupportedFormat(candidateFormats, vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment);
 }
+
+bool Application::hasStencilComponent(vk::Format format) const {
+    return format == vk::Format::eD32SfloatS8Uint || format == vk::Format::eD24UnormS8Uint;
+}
