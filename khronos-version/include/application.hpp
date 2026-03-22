@@ -18,6 +18,9 @@ import vulkan_hpp;
 #include <limits> // for std::numeric_limits
 #include <algorithm> // for std::clamp
 #include <fstream> // read shader file
+#ifndef GLM_FORCE_DEPTH_ZERO_TO_ONE
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#endif
 #include <glm/gtc/matrix_transform.hpp> // for model view projection
 #include <chrono> // for model view projection
 #include "../include/vertex.hpp"

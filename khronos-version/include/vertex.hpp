@@ -9,6 +9,9 @@
 import vulkan_hpp;
 #endif
 
+#ifndef GLM_FORCE_DEPTH_ZERO_TO_ONE
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#endif
 #include <glm/glm.hpp> // for vectors and matrices for computer graphics
 
 struct Vertex {
