@@ -1518,7 +1518,7 @@ vk::Format Application::findSupportedFormat(
         case vk::ImageTiling::eLinear:
             for (vk::Format const & format : candidateFormats) {
                 vk::FormatProperties const props {physicalDevice.getFormatProperties(format)};
-                if (props.linearTilingFeatures == features) {
+                if ((props.linearTilingFeatures & features) == features) {
                     return format;
                 }
             }
@@ -1526,7 +1526,7 @@ vk::Format Application::findSupportedFormat(
         case vk::ImageTiling::eOptimal:
             for (vk::Format const & format : candidateFormats) {
                 vk::FormatProperties const props {physicalDevice.getFormatProperties(format)};
-                if (props.optimalTilingFeatures == features) {
+                if ((props.optimalTilingFeatures & features) == features) {
                     return format;
                 }
             }
