@@ -614,9 +614,21 @@ void Application::createGraphicsPipeline() {
 
     pipelineLayout = vk::raii::PipelineLayout(device, pipelineLayoutCreateInfo);
 
+    // Maybe the depth resources should be created before the graphics pipeline?
+    depthFormat = findDepthFormat();
+
     vk::PipelineRenderingCreateInfo const pipelineRenderingCreateInfo {
         .colorAttachmentCount = 1,
-        .pColorAttachmentFormats = &swapChainSurfaceFormat.format
+        .pColorAttachmentFormats = &swapChainSurfaceFormat.format,
+        .depthAttachmentFormat = depthFormat
+    };
+
+    vk::PipelineDepthStencilStateCreateInfo constexpr depthStencilStateCreateInfo {
+        .depthTestEnable = vk::True,
+        .depthWriteEnable = vk::True,
+        .depthCompareOp = vk::CompareOp::eLess,
+        .depthBoundsTestEnable = vk::False,
+        .stencilTestEnable = vk::False
     };
 
     vk::GraphicsPipelineCreateInfo const graphicsPipelineCreateInfo {
@@ -628,6 +640,7 @@ void Application::createGraphicsPipeline() {
         .pViewportState =       &pipelineViewportStateCreateInfo,
         .pRasterizationState =  &pipelineRasterizationStateCreateInfo,
         .pMultisampleState =    &pipelineMultisampleStateCreateInfo,
+        .pDepthStencilState =   &depthStencilStateCreateInfo,
         .pColorBlendState =     &pipelineColorBlendStateCreateInfo,
         .pDynamicState =        &pipelineDynamicStateCreateInfo,
         .layout =               pipelineLayout,
@@ -1585,7 +1598,8 @@ bool Application::hasStencilComponent(vk::Format format) const {
 }
 
 void Application::createDepthResources() {
-    vk::Format depthFormat = findDepthFormat();
+    // Initialized in pipeline creation
+    //depthFormat = findDepthFormat();
 
     // Create depth image, allocate memory for it and bind it
     createImage(

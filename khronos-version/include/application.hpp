@@ -122,6 +122,7 @@ private:
     vk::raii::Image depthImage {nullptr};
     vk::raii::DeviceMemory depthImageMemory {nullptr};
     vk::raii::ImageView depthImageView {nullptr};
+    vk::Format depthFormat;
 
     /////////////////////////////////////// METHODS //////////////////////////////////////////////////
 
