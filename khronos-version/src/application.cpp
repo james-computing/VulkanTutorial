@@ -969,6 +969,7 @@ void Application::recreateSwapChain() {
     cleanupSwapChain();
     createSwapChain();
     createImageViews();
+    createDepthResources();
 }
 
 void Application::frameBufferResizeCallback(GLFWwindow * window, int width, int height) {
