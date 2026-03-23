@@ -31,6 +31,7 @@ void Application::initVulkan() {
     createTextureImage();
     createTextureImageView();
     createTextureSampler();
+    loadModel();
     createVertexBuffer();
     createIndexBuffer();
     createUniformBuffers();
@@ -1620,4 +1621,43 @@ void Application::createDepthResources() {
 
     // Create depth image view
     depthImageView = createImageView(depthImage, depthFormat, vk::ImageAspectFlagBits::eDepth);
+}
+
+void Application::loadModel() {
+    tinyobj::attrib_t attrib;
+    std::vector<tinyobj::shape_t> shapes;
+    std::vector<tinyobj::material_t> materials;
+    std::string warn, err;
+
+    if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, modelPath.c_str())) {
+        std::cerr << "Failed to load model" << std::endl;
+        throw std::runtime_error(warn + err);
+    }
+
+    size_t triple_vertex_index;
+    size_t double_texture_index;
+    for (tinyobj::shape_t const & shape : shapes) {
+        for (auto const & index : shape.mesh.indices) {
+            Vertex vertex;
+
+            triple_vertex_index = 3 * index.vertex_index;
+            vertex.position = {
+                attrib.vertices[triple_vertex_index],
+                attrib.vertices[triple_vertex_index + 1],
+                attrib.vertices[triple_vertex_index + 2]
+            };
+
+            double_texture_index = 2 * index.texcoord_index;
+            vertex.textureCoord = {
+                attrib.texcoords[double_texture_index],
+                attrib.texcoords[double_texture_index + 1]
+            };
+
+            // Do we need a color?
+            vertex.color = {1.0f, 1.0f, 1.0f};
+
+            vertices.emplace_back(vertex); // there will be vertex duplication
+            indices.emplace_back(indices.size());
+        }
+    }
 }

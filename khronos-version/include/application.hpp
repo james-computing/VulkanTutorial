@@ -247,4 +247,6 @@ private:
     vk::Format findDepthFormat() const;
     bool hasStencilComponent(vk::Format format) const;
     void createDepthResources();
+
+    void loadModel();
 };
