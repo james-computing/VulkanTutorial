@@ -230,11 +230,10 @@ private:
     void beginSingleTimeCommands(vk::raii::CommandBuffer & commandBuffer) const;
     void endSingleTimeCommands(vk::raii::CommandBuffer const & commandBuffer) const;
 
-    void transitionImageLayout(
+    void transitionTextureImageLayout(
         vk::raii::Image const & image,
         vk::ImageLayout oldLayout,
-        vk::ImageLayout newLayout,
-        vk::ImageAspectFlags imageAspectFlags
+        vk::ImageLayout newLayout
     ) const;
 
     void copyBufferToImage(
