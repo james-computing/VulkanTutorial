@@ -1636,6 +1636,9 @@ void Application::loadModel() {
 
     size_t triple_vertex_index;
     size_t double_texture_index;
+    // Make a map to store a vertex and the index attribute to it in its first appearance
+    std::unordered_map<Vertex, uint32_t> uniqueVertices {};
+    uint32_t newVertexIndex;
     for (tinyobj::shape_t const & shape : shapes) {
         for (auto const & index : shape.mesh.indices) {
             Vertex vertex;
@@ -1656,8 +1659,18 @@ void Application::loadModel() {
             // Do we need a color?
             vertex.color = {1.0f, 1.0f, 1.0f};
 
-            vertices.emplace_back(vertex); // there will be vertex duplication
-            indices.emplace_back(indices.size());
+            // If the vertex is new, store it in uniqueVertices and give it an index
+            if (uniqueVertices.count(vertex) == 0) {
+                // Create an index
+                newVertexIndex = static_cast<uint32_t>(vertices.size());
+                // Store the vertex and its index in the map
+                uniqueVertices[vertex] = newVertexIndex;
+                // Store the vertex is the vertices vector
+                vertices.emplace_back(vertex);
+            }
+            
+            // Store the index of the vector
+            indices.emplace_back(uniqueVertices[vertex]);
         }
     }
 }

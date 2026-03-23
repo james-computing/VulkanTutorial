@@ -14,6 +14,10 @@ import vulkan_hpp;
 #endif
 #include <glm/glm.hpp> // for vectors and matrices for computer graphics
 
+// For using a map indexed by Vertex
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/hash.hpp>
+
 struct Vertex {
     glm::vec3 position;
     glm::vec3 color;
@@ -49,4 +53,14 @@ struct Vertex {
             }
         };
     }
+
+    // For using a map indexed by Vertex
+    bool operator==(Vertex const & other) const;
 };
+
+// For using a map indexed by Vertex
+namespace std {
+    template<> struct hash<Vertex> {
+        size_t operator()(Vertex const & vertex) const;
+    };
+}
