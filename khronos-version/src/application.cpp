@@ -1708,7 +1708,16 @@ void Application::generateMipmaps(
         throw std::runtime_error("Texture image support does not support linear blitting!");
     }
 
-    // Proceed with blitting
+    // Proceed with blitting.
+    // It works as follows.
+    // All mip levels start in layout eTransferDstOptimal, as of entering this function.
+    // To blit, we need the level i - 1 to be in the layout eTransferSrcOptimal.
+    // A barrier is used to make this transition before blitting.
+    // After blitting, the level i - 1 is transitioned to the layout eShaderReadOnlyOptimal,
+    // since the texture will be read by the shader in the fragment stage.
+    // The last level, which is mipLevels - 1, isn't transitioned to eTransferSrcOptimal, so
+    // it is transitioned directly to the layout eShaderReadOnlyOptimal in the end.
+    
     vk::raii::CommandBuffer commandBuffer {nullptr};
     beginSingleTimeCommands(commandBuffer);
 
