@@ -755,6 +755,18 @@ void Application::recordCommandBuffer(uint32_t imageIndex) {
         vk::ImageAspectFlagBits::eColor
     );
 
+    // Is it necessary to make this transition for every frame? There is a single transition for the depth buffer.
+    transitionImageLayout(
+        *depthImage,
+        vk::ImageLayout::eUndefined,
+        vk::ImageLayout::eDepthAttachmentOptimal,
+        vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
+        vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
+        vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests,
+        vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests,
+        vk::ImageAspectFlagBits::eDepth
+    );
+
     vk::ClearValue constexpr clearColor {vk::ClearColorValue(0.0f, 0.0f, 0.0f, 1.0f)}; // black
 
     vk::RenderingAttachmentInfo const colorAttachmentInfo {
