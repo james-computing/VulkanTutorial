@@ -1710,10 +1710,11 @@ void Application::generateMipmaps(
     beginSingleTimeCommands(commandBuffer);
 
     vk::ImageMemoryBarrier barrier {
-        .srcAccessMask = vk::AccessFlagBits::eTransferWrite,
-        .dstAccessMask = vk::AccessFlagBits::eTransferRead,
-        .oldLayout = vk::ImageLayout::eTransferDstOptimal,
-        .newLayout = vk::ImageLayout::eTransferSrcOptimal,
+        // Redundant, same values will be set in for loop.
+        //.srcAccessMask = vk::AccessFlagBits::eTransferWrite,
+        //.dstAccessMask = vk::AccessFlagBits::eTransferRead,
+        //.oldLayout = vk::ImageLayout::eTransferDstOptimal,
+        //.newLayout = vk::ImageLayout::eTransferSrcOptimal,
         .srcQueueFamilyIndex = vk::QueueFamilyIgnored,
         .dstQueueFamilyIndex = vk::QueueFamilyIgnored,
         .image = *image,
