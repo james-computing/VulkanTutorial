@@ -1365,13 +1365,16 @@ void Application::createTextureImage() {
     );
     // Copy texture from staging buffer to image
     copyBufferToImage(stagingBuffer, textureImage, static_cast<uint32_t>(textureWidth), static_cast<uint32_t>(textureHeight));
-    // Transition image layout to be read from shader
+    // Transition image layout to be read from shader.
+    // This transition will be done in generateMipmaps.
+    /*
     transitionTextureImageLayout(
         textureImage,
         vk::ImageLayout::eTransferDstOptimal,
         vk::ImageLayout::eShaderReadOnlyOptimal,
         mipLevels
     );
+    */
 
     generateMipmaps(textureImage, vk::Format::eR8G8B8A8Srgb, textureWidth, textureHeight, mipLevels);
 }
