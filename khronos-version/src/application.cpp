@@ -1303,11 +1303,21 @@ void Application::createTextureImage() {
     );
     
     // Transition image layout to receive texture
-    transitionImageLayout(textureImage, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
+    transitionImageLayout(
+        textureImage,
+        vk::ImageLayout::eUndefined,
+        vk::ImageLayout::eTransferDstOptimal,
+        vk::ImageAspectFlagBits::eColor
+    );
     // Copy texture from staging buffer to image
     copyBufferToImage(stagingBuffer, textureImage, static_cast<uint32_t>(textureWidth), static_cast<uint32_t>(textureHeight));
     // Transition image layout to be read from shader
-    transitionImageLayout(textureImage, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
+    transitionImageLayout(
+        textureImage,
+        vk::ImageLayout::eTransferDstOptimal,
+        vk::ImageLayout::eShaderReadOnlyOptimal,
+        vk::ImageAspectFlagBits::eColor
+    );
 }
 
 void Application::createImage(
@@ -1380,7 +1390,8 @@ void Application::endSingleTimeCommands(vk::raii::CommandBuffer const & commandB
 void Application::transitionImageLayout(
     vk::raii::Image const & image,
     vk::ImageLayout oldLayout,
-    vk::ImageLayout newLayout
+    vk::ImageLayout newLayout,
+    vk::ImageAspectFlags imageAspectFlags
 ) const {
     vk::raii::CommandBuffer commandBuffer {nullptr};
     beginSingleTimeCommands(commandBuffer);
@@ -1390,7 +1401,7 @@ void Application::transitionImageLayout(
         .newLayout = newLayout,
         .image = image,
         .subresourceRange = vk::ImageSubresourceRange {
-            .aspectMask = vk::ImageAspectFlagBits::eColor,
+            .aspectMask = imageAspectFlags,
             .baseMipLevel = 0,
             .levelCount = 1,
             .baseArrayLayer = 0,

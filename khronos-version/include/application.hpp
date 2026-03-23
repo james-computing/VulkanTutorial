@@ -232,7 +232,8 @@ private:
     void transitionImageLayout(
         vk::raii::Image const & image,
         vk::ImageLayout oldLayout,
-        vk::ImageLayout newLayout
+        vk::ImageLayout newLayout,
+        vk::ImageAspectFlags imageAspectFlags
     ) const;
 
     void copyBufferToImage(
