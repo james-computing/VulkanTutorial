@@ -116,6 +116,11 @@ private:
 
     vk::SampleCountFlagBits msaaSamples {vk::SampleCountFlagBits::e1};
 
+    // For MSAA
+    vk::raii::Image colorImage {nullptr};
+    vk::raii::DeviceMemory colorImageMemory {nullptr};
+    vk::raii::ImageView colorImageView {nullptr};
+
     /////////////////////////////////////// METHODS //////////////////////////////////////////////////
 
     void initVulkan();
@@ -268,4 +273,6 @@ private:
     ) const;
 
     vk::SampleCountFlagBits getMaxUsableSampleCount() const;
+
+    void createColorResources();
 };

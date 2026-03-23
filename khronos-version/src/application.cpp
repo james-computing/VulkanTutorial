@@ -28,6 +28,7 @@ void Application::initVulkan() {
     createGraphicsPipeline();
     createCommandPool();
     createDepthResources();
+    createColorResources();
     createTextureImage();
     createTextureImageView();
     createTextureSampler();
@@ -1870,4 +1871,23 @@ vk::SampleCountFlagBits Application::getMaxUsableSampleCount() const {
     }
 
     return vk::SampleCountFlagBits::e1;
+}
+
+void Application::createColorResources() {
+    vk::Format const colorFormat = swapChainSurfaceFormat.format;
+
+    createImage(
+        swapChainExtent.width,
+        swapChainExtent.height,
+        1,
+        msaaSamples,
+        colorFormat,
+        vk::ImageTiling::eOptimal,
+        vk::ImageUsageFlagBits::eTransientAttachment | vk::ImageUsageFlagBits::eColorAttachment,
+        vk::MemoryPropertyFlagBits::eDeviceLocal,
+        colorImage,
+        colorImageMemory
+    );
+
+    createImageView(colorImage, colorFormat, vk::ImageAspectFlagBits::eColor, 1);
 }
