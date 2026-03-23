@@ -170,13 +170,14 @@ private:
     void createCommandBuffers();
 
     void transitionImageLayout(
-        uint32_t imageIndex,
+        vk::Image const & image, // not vk::raii::Image, because swapChain.getImages returns vk::Image
         vk::ImageLayout oldLayout,
         vk::ImageLayout newLayout,
         vk::AccessFlags2 srcAccessMask,
         vk::AccessFlags2 dstAccessMask,
         vk::PipelineStageFlags2 srcStageMask,
-        vk::PipelineStageFlags2 dstStageMask
+        vk::PipelineStageFlags2 dstStageMask,
+        vk::ImageAspectFlags imageAspectFlags
     ) const;
 
     void recordCommandBuffer(uint32_t imageIndex);

@@ -700,13 +700,14 @@ void Application::createCommandBuffers() {
 }
 
 void Application::transitionImageLayout(
-    uint32_t imageIndex,
+    vk::Image const & image,
     vk::ImageLayout oldLayout,
     vk::ImageLayout newLayout,
     vk::AccessFlags2 srcAccessMask,
     vk::AccessFlags2 dstAccessMask,
     vk::PipelineStageFlags2 srcStageMask,
-    vk::PipelineStageFlags2 dstStageMask
+    vk::PipelineStageFlags2 dstStageMask,
+    vk::ImageAspectFlags imageAspectFlags
 ) const {
     // Use a barrier to change the image layout
     vk::ImageMemoryBarrier2 const barrier {
@@ -718,9 +719,9 @@ void Application::transitionImageLayout(
         .newLayout = newLayout,
         .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
         .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-        .image = swapChainImages[imageIndex],
+        .image = image,
         .subresourceRange = vk::ImageSubresourceRange {
-            .aspectMask = vk::ImageAspectFlagBits::eColor,
+            .aspectMask = imageAspectFlags,
             .baseMipLevel = 0,
             .levelCount = 1,
             .baseArrayLayer = 0,
@@ -744,13 +745,14 @@ void Application::recordCommandBuffer(uint32_t imageIndex) {
 
     // Before start rendering, transition the swap chain image layout to COLOR_ATTACHMENT_OPTIMAL
     transitionImageLayout(
-        imageIndex,
+        swapChainImages[imageIndex],
         vk::ImageLayout::eUndefined,
         vk::ImageLayout::eColorAttachmentOptimal,
         vk::AccessFlagBits2::eNone, // don't wait on previous operations
         vk::AccessFlagBits2::eColorAttachmentWrite,
         vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-        vk::PipelineStageFlagBits2::eColorAttachmentOutput
+        vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+        vk::ImageAspectFlagBits::eColor
     );
 
     vk::ClearValue constexpr clearColor {vk::ClearColorValue(0.0f, 0.0f, 0.0f, 1.0f)}; // black
@@ -818,13 +820,14 @@ void Application::recordCommandBuffer(uint32_t imageIndex) {
 
     // After rendering, transition the swapchain image to PRESENT_SRC
     transitionImageLayout(
-        imageIndex,
+        swapChainImages[imageIndex],
         vk::ImageLayout::eColorAttachmentOptimal,
         vk::ImageLayout::ePresentSrcKHR,
         vk::AccessFlagBits2::eColorAttachmentWrite,
         vk::AccessFlagBits2::eNone,
         vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-        vk::PipelineStageFlagBits2::eBottomOfPipe
+        vk::PipelineStageFlagBits2::eBottomOfPipe,
+        vk::ImageAspectFlagBits::eColor
     );
 
     commandBuffer.end();
