@@ -114,6 +114,8 @@ private:
 
     uint32_t mipLevels;
 
+    vk::SampleCountFlagBits msaaSamples {vk::SampleCountFlagBits::e1};
+
     /////////////////////////////////////// METHODS //////////////////////////////////////////////////
 
     void initVulkan();

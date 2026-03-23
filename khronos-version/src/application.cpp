@@ -234,6 +234,7 @@ void Application::pickPhysicalDevice() {
 
     // Pick the first suitable physical device found
     physicalDevice = *deviceIterator;
+    msaaSamples = getMaxUsableSampleCount();
 }
 
 bool Application::isDeviceSuitable(vk::raii::PhysicalDevice const & physicalDevice) const {
