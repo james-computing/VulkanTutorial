@@ -1890,5 +1890,5 @@ void Application::createColorResources() {
         colorImageMemory
     );
 
-    createImageView(colorImage, colorFormat, vk::ImageAspectFlagBits::eColor, 1);
+    colorImageView = createImageView(colorImage, colorFormat, vk::ImageAspectFlagBits::eColor, 1);
 }
