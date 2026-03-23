@@ -1650,7 +1650,7 @@ void Application::loadModel() {
             double_texture_index = 2 * index.texcoord_index;
             vertex.textureCoord = {
                 attrib.texcoords[double_texture_index],
-                attrib.texcoords[double_texture_index + 1]
+                1.0f - attrib.texcoords[double_texture_index + 1]
             };
 
             // Do we need a color?
