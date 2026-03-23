@@ -753,14 +753,24 @@ void Application::recordCommandBuffer(uint32_t imageIndex) {
         vk::PipelineStageFlagBits2::eColorAttachmentOutput
     );
 
-    vk::ClearValue constexpr clearColor {vk::ClearColorValue(0.0f, 0.0f, 0.0f, 1.0f)};
+    vk::ClearValue constexpr clearColor {vk::ClearColorValue(0.0f, 0.0f, 0.0f, 1.0f)}; // black
 
-    vk::RenderingAttachmentInfo const renderingAttachmentInfo {
+    vk::RenderingAttachmentInfo const colorAttachmentInfo {
         .imageView = swapChainImageViews[imageIndex],
         .imageLayout = vk::ImageLayout::eColorAttachmentOptimal,
         .loadOp = vk::AttachmentLoadOp::eClear,
         .storeOp = vk::AttachmentStoreOp::eStore,
         .clearValue = clearColor
+    };
+
+    vk::ClearValue constexpr clearDepth {vk::ClearDepthStencilValue(1.0f, 0)}; // 1.0 = far view plane
+
+    vk::RenderingAttachmentInfo const depthAttachmentInfo {
+        .imageView = depthImageView,
+        .imageLayout = vk::ImageLayout::eDepthAttachmentOptimal,
+        .loadOp = vk::AttachmentLoadOp::eClear,
+        .storeOp = vk::AttachmentStoreOp::eDontCare,
+        .clearValue = clearDepth
     };
 
     vk::RenderingInfo const renderingInfo {
@@ -770,7 +780,8 @@ void Application::recordCommandBuffer(uint32_t imageIndex) {
         },
         .layerCount = 1,
         .colorAttachmentCount = 1,
-        .pColorAttachments = &renderingAttachmentInfo
+        .pColorAttachments = &colorAttachmentInfo,
+        .pDepthAttachment = &depthAttachmentInfo
     };
 
     commandBuffer.beginRendering(renderingInfo);
