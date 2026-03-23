@@ -112,6 +112,8 @@ private:
     vk::raii::ImageView depthImageView {nullptr};
     vk::Format depthFormat;
 
+    uint32_t mipLevels;
+
     /////////////////////////////////////// METHODS //////////////////////////////////////////////////
 
     void initVulkan();
@@ -208,6 +210,7 @@ private:
     void createImage(
         uint32_t width,
         uint32_t height,
+        uint32_t mipLevels,
         vk::Format imageFormat,
         vk::ImageTiling imageTiling,
         vk::ImageUsageFlags imageUsage,
@@ -222,7 +225,8 @@ private:
     void transitionTextureImageLayout(
         vk::raii::Image const & image,
         vk::ImageLayout oldLayout,
-        vk::ImageLayout newLayout
+        vk::ImageLayout newLayout,
+        uint32_t mipLevels
     ) const;
 
     void copyBufferToImage(
@@ -235,7 +239,8 @@ private:
     vk::raii::ImageView createImageView(
         vk::raii::Image const & image,
         vk::Format format,
-        vk::ImageAspectFlags aspectFlags
+        vk::ImageAspectFlags aspectFlags,
+        uint32_t mipLevels
     ) const;
     void createTextureImageView();
     void createTextureSampler();
@@ -250,4 +255,12 @@ private:
     void createDepthResources();
 
     void loadModel();
+
+    void generateMipmaps(
+        vk::raii::Image & image,
+        vk::Format imageFormat,
+        int32_t textureWidth,
+        int32_t textureHeight,
+        uint32_t mipLevels
+    ) const;
 };
