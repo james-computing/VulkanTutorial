@@ -263,4 +263,6 @@ private:
         int32_t textureHeight,
         uint32_t mipLevels
     ) const;
+
+    vk::SampleCountFlagBits getMaxUsableSampleCount() const;
 };

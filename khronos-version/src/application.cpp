@@ -1837,3 +1837,33 @@ void Application::generateMipmaps(
 
     endSingleTimeCommands(commandBuffer);
 }
+
+vk::SampleCountFlagBits Application::getMaxUsableSampleCount() const {
+    vk::PhysicalDeviceProperties const physicalDeviceProperties {physicalDevice.getProperties()};
+
+    vk::SampleCountFlags sampleCounts {
+        physicalDeviceProperties.limits.framebufferColorSampleCounts &
+        physicalDeviceProperties.limits.framebufferDepthSampleCounts
+    };
+
+    if (sampleCounts & vk::SampleCountFlagBits::e64) {
+        return vk::SampleCountFlagBits::e64;
+    }
+    if (sampleCounts & vk::SampleCountFlagBits::e32) {
+        return vk::SampleCountFlagBits::e32;
+    }
+    if (sampleCounts & vk::SampleCountFlagBits::e16) {
+        return vk::SampleCountFlagBits::e16;
+    }
+    if (sampleCounts & vk::SampleCountFlagBits::e8) {
+        return vk::SampleCountFlagBits::e8;
+    }
+    if (sampleCounts & vk::SampleCountFlagBits::e4) {
+        return vk::SampleCountFlagBits::e4;
+    }
+    if (sampleCounts & vk::SampleCountFlagBits::e2) {
+        return vk::SampleCountFlagBits::e2;
+    }
+
+    return vk::SampleCountFlagBits::e1;
+}
