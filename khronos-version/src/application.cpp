@@ -1339,7 +1339,7 @@ void Application::createTextureImage() {
 
     vk::ImageTiling constexpr imageTiling {vk::ImageTiling::eOptimal};
     vk::ImageUsageFlags constexpr imageUsage {
-        vk::ImageUsageFlagBits::eTransferSrc |
+        vk::ImageUsageFlagBits::eTransferSrc | // for mip map creation
         vk::ImageUsageFlagBits::eTransferDst |
         vk::ImageUsageFlagBits::eSampled
     };
