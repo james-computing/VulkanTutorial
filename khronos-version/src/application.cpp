@@ -978,6 +978,7 @@ void Application::recreateSwapChain() {
     cleanupSwapChain();
     createSwapChain();
     createImageViews();
+    createColorResources();
     createDepthResources();
 }
 
