@@ -21,6 +21,7 @@ void Application::initVulkan() {
     setupDebugMessenger();
     createSurface();
     pickPhysicalDevice();
+    msaaSamples = getMaxUsableSampleCount();
     createLogicalDevice();
     createSwapChain();
     createImageViews();
@@ -235,7 +236,6 @@ void Application::pickPhysicalDevice() {
 
     // Pick the first suitable physical device found
     physicalDevice = *deviceIterator;
-    msaaSamples = getMaxUsableSampleCount();
 }
 
 bool Application::isDeviceSuitable(vk::raii::PhysicalDevice const & physicalDevice) const {
