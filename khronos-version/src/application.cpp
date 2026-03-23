@@ -27,8 +27,8 @@ void Application::initVulkan() {
     createDescriptorSetLayout();
     createGraphicsPipeline();
     createCommandPool();
-    createDepthResources();
     createColorResources();
+    createDepthResources();
     createTextureImage();
     createTextureImageView();
     createTextureSampler();
@@ -595,8 +595,8 @@ void Application::createGraphicsPipeline() {
         .lineWidth = 1.0f
     };
 
-    vk::PipelineMultisampleStateCreateInfo constexpr pipelineMultisampleStateCreateInfo {
-        .rasterizationSamples = vk::SampleCountFlagBits::e1,
+    vk::PipelineMultisampleStateCreateInfo const pipelineMultisampleStateCreateInfo {
+        .rasterizationSamples = msaaSamples,
         .sampleShadingEnable = vk::False
     };
 
@@ -777,6 +777,18 @@ void Application::recordCommandBuffer(uint32_t imageIndex) {
         vk::ImageAspectFlagBits::eColor
     );
 
+    // Transition multisampled color image to eColorAttachmentOptimal
+    transitionImageLayout(
+        *colorImage,
+        vk::ImageLayout::eUndefined,
+        vk::ImageLayout::eColorAttachmentOptimal,
+        vk::AccessFlagBits2::eColorAttachmentWrite,
+        vk::AccessFlagBits2::eColorAttachmentWrite,
+        vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+        vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+        vk::ImageAspectFlagBits::eColor
+    );
+
     // Is it necessary to make this transition for every frame? There is a single transition for the depth buffer.
     transitionImageLayout(
         *depthImage,
@@ -791,9 +803,13 @@ void Application::recordCommandBuffer(uint32_t imageIndex) {
 
     vk::ClearValue constexpr clearColor {vk::ClearColorValue(0.0f, 0.0f, 0.0f, 1.0f)}; // black
 
+    // MSAA with resolve
     vk::RenderingAttachmentInfo const colorAttachmentInfo {
-        .imageView = swapChainImageViews[imageIndex],
+        .imageView = *colorImageView,
         .imageLayout = vk::ImageLayout::eColorAttachmentOptimal,
+        .resolveMode = vk::ResolveModeFlagBits::eAverage,
+        .resolveImageView = swapChainImageViews[imageIndex],
+        .resolveImageLayout = vk::ImageLayout::eColorAttachmentOptimal,
         .loadOp = vk::AttachmentLoadOp::eClear,
         .storeOp = vk::AttachmentStoreOp::eStore,
         .clearValue = clearColor
