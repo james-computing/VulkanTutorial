@@ -181,7 +181,9 @@ VKAPI_ATTR vk::Bool32 VKAPI_CALL Application::debugCallback(
     std::cerr << "\nvalidation layer:\n" <<
                     "\ttype " << vk::to_string(type) << '\n' <<
                     "\tmsg: " << pCallBackData->pMessage << std::endl;
-
+    if (type >= vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation) {
+        throw std::runtime_error("Vulkan error!");
+    }
     return vk::False;
 }
 
