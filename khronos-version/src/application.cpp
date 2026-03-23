@@ -1635,7 +1635,7 @@ void Application::createDepthResources() {
         swapChainExtent.width,
         swapChainExtent.height,
         1,
-        vk::SampleCountFlagBits::e1,
+        msaaSamples,
         depthFormat,
         vk::ImageTiling::eOptimal,
         vk::ImageUsageFlagBits::eDepthStencilAttachment,
