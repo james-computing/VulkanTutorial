@@ -1,8 +1,9 @@
+CXX = g++
 CXXFLAGS = -std=c++23 -O3 #-g
 LDFLAGS = -lglfw -ldl -lpthread -lX11 -lXxf86vm -lXrandr -lXi
 
 main: main.cpp
-	g++ $(CXXFLAGS) main.cpp $(LDFLAGS) -o main
+	$(CXX) $(CXXFLAGS) main.cpp $(LDFLAGS) -o main
 
 .PHONY: test clean
 
