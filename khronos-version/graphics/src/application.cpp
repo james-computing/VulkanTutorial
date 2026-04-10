@@ -3,11 +3,11 @@
 // Include here to avoid multiple implementation.
 // STB is for loading the texture image.
 #define STB_IMAGE_IMPLEMENTATION
-#include "../original-version/Rendering/libraries/stb/stb_image.h"
+#include "../../original-version/Rendering/libraries/stb/stb_image.h"
 
 // Tiny obj loader is for loading the 3d model.
 #define TINYOBJLOADER_IMPLEMENTATION
-#include "../original-version/Rendering/libraries/tinyobjloader/tiny_obj_loader.h"
+#include "../../original-version/Rendering/libraries/tinyobjloader/tiny_obj_loader.h"
 
 void Application::run() {
     initWindow();
