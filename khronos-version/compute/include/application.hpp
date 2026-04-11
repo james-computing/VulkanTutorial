@@ -26,9 +26,13 @@ import vulkan_hpp;
 #endif
 
 // for compute chapter
-#include <random> 
+#include <random>
 #include "../include/compute-structs.hpp"
 
+#ifndef GLM_ENABLE_EXPERIMENTAL
+#define GLM_ENABLE_EXPERIMENTAL
+#endif
+#include <glm/gtx/color_space.hpp> // for coloring the particles
 
 
 class Application {

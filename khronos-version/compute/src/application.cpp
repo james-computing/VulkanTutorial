@@ -1166,6 +1166,7 @@ float clamp(float const value) {
 void Application::createShaderStorageBuffers() {
     
     // Make uniform distribution over interval [0,1]
+    /*
     std::default_random_engine rndEngine((unsigned) time(nullptr));
     std::uniform_real_distribution<float> rndDist(0.0f, 1.0f);
 
@@ -1185,6 +1186,26 @@ void Application::createShaderStorageBuffers() {
         particle.position = glm::vec2(x, y);
         particle.velocity = glm::normalize(glm::vec2(x, y)) * 0.0001f;
         particle.color = glm::vec3(rndDist(rndEngine), rndDist(rndEngine), rndDist(rndEngine));
+    }
+    */
+
+    // Initiliaze particles
+    std::vector<Particle> particles(PARTICLE_COUNT);
+    float const aspectRatio {((float) HEIGHT) / WIDTH};
+    for (size_t i {0}; i < PARTICLE_COUNT; ++i) {
+        // Make random radius and angle
+        float const percent {((float) i)/PARTICLE_COUNT};
+        float const theta {percent * 2.0f * 3.14159265358979323846f};
+        float const radius {0.5f + 0.45f * sinf(12.0f * theta)};
+
+        // Transfer to cartesian coordinates, taking into account the aspect ration
+        float const x {radius * cosf(theta) * aspectRatio};
+        float const y {radius * sinf(theta)};
+
+        // Set particle
+        particles[i].position = glm::vec2(x, y);
+        particles[i].velocity = glm::normalize(glm::vec2(x, y)) * 0.0001f;
+        particles[i].color = glm::rgbColor(glm::vec3(360.0f * percent, 1.0f, 1.0f));
     }
 
     // Create a staging buffer to upload data to the gpu
