@@ -1,6 +1,6 @@
 main
-*/libraries/*
-*/textures/*
-*/models/*
-*/obj/*
-*/.vscode/*
+**/libraries/
+**/textures/
+**/models/
+**/obj/
+**/.vscode/
